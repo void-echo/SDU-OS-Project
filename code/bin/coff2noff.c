@@ -29,7 +29,11 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <io.h>		// equivalent to unistd.h.
+#else
 #include <unistd.h>
+#endif
 #include "coff.h"
 #include "noff.h"
 #include <string.h>

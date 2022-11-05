@@ -24,7 +24,11 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
+#ifdef _WIN32
+#include <io.h>		// equivalent to unistd.h.
+#else
 #include <unistd.h>
+#endif
 extern "C" {
 #include <stdio.h>
 #include <string.h>
