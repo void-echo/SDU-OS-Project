@@ -8,14 +8,8 @@ $crr = @("bin", "depends", "objects")
 
 foreach ($a in $arr) {
     foreach ($b in $brr) {
-        foreach ($c in $crr) {
-            $path = "./$a/arch/$b/$c"
-            if (!(Test-Path $path)) {
-                New-Item -ItemType Directory -Path $path
-            }
-            # create a placeholder file
-                New-Item -ItemType File -Path "$path/placeholder.txt" -Value "placeholder"
-        }
+        # rm -rf ./$a/$b
+        Remove-Item -Path ./$a/$b -Recurse -Force
     }
 }
 
