@@ -39,11 +39,23 @@ Thread::Thread(const char *threadName) {
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
+    #ifdef THREAD_PRIORITY
+    priority = 9;       // default priority is 9
+    #endif
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
 }
 
+Thread::Thread(const char *threadName, THREAD_PRIORITY priority) {
+    name = (char *)threadName;
+    stackTop = NULL;
+    stack = NULL;
+    status = JUST_CREATED;
+    // make sure priority is in range [0, 99]
+    priority = (priority < 0) ? 0 : (priority > 99) ? 99 : priority;
+    this->priority = priority;
+}
 //----------------------------------------------------------------------
 // Thread::~Thread
 // 	De-allocate a thread.
@@ -57,7 +69,11 @@ Thread::Thread(const char *threadName) {
 //----------------------------------------------------------------------
 
 Thread::~Thread() {
+    #ifndef THREAD_PRIORITY
     DEBUG('t', "Deleting thread \"%s\"\n", name);
+    #else
+    DEBUG('t', "Deleting thread \"%s\" with priority %d\n", name, priority);
+    #endif
 
     ASSERT(this != currentThread);
     if (stack != NULL)

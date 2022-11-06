@@ -37,6 +37,7 @@ void SimpleThread(_int which) {
 //----------------------------------------------------------------------
 
 void ThreadTest() {
+    printf("ThreadTest in LAB2, Starting!\n");
     DEBUG('t', "Entering SimpleTest");
 
     Thread *t = new Thread("forked thread");

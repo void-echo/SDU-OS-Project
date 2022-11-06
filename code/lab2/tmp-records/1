@@ -1,0 +1,71 @@
+Entering SimpleTestForking thread "forked thread" with func = 0x56627265, arg = 1
+Putting thread forked thread on ready list.
+*** thread 0 looped 0 times
+Yielding thread "main"
+Putting thread main on ready list.
+Switching from thread "main" to thread "forked thread"
+*** thread 1 looped 0 times
+Yielding thread "forked thread"
+Putting thread forked thread on ready list.
+Switching from thread "forked thread" to thread "main"
+Now in thread "main"
+*** thread 0 looped 1 times
+Yielding thread "main"
+Putting thread main on ready list.
+Switching from thread "main" to thread "forked thread"
+Now in thread "forked thread"
+*** thread 1 looped 1 times
+Yielding thread "forked thread"
+Putting thread forked thread on ready list.
+Switching from thread "forked thread" to thread "main"
+Now in thread "main"
+*** thread 0 looped 2 times
+Yielding thread "main"
+Putting thread main on ready list.
+Switching from thread "main" to thread "forked thread"
+Now in thread "forked thread"
+*** thread 1 looped 2 times
+Yielding thread "forked thread"
+Putting thread forked thread on ready list.
+Switching from thread "forked thread" to thread "main"
+Now in thread "main"
+*** thread 0 looped 3 times
+Yielding thread "main"
+Putting thread main on ready list.
+Switching from thread "main" to thread "forked thread"
+Now in thread "forked thread"
+*** thread 1 looped 3 times
+Yielding thread "forked thread"
+Putting thread forked thread on ready list.
+Switching from thread "forked thread" to thread "main"
+Now in thread "main"
+*** thread 0 looped 4 times
+Yielding thread "main"
+Putting thread main on ready list.
+Switching from thread "main" to thread "forked thread"
+Now in thread "forked thread"
+*** thread 1 looped 4 times
+Yielding thread "forked thread"
+Putting thread forked thread on ready list.
+Switching from thread "forked thread" to thread "main"
+Now in thread "main"
+Finishing thread "main"
+Sleeping thread "main"
+Switching from thread "main" to thread "forked thread"
+Now in thread "forked thread"
+Deleting thread "main"
+Finishing thread "forked thread"
+Sleeping thread "forked thread"
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+Ticks: total 130, idle 0, system 130, user 0
+Disk I/O: reads 0, writes 0
+Console I/O: reads 0, writes 0
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...
+beihai@ubuntu:~/oscp/nachos-3.4-ualr-2022/code/threads$ 
+

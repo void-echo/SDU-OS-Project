@@ -54,6 +54,10 @@
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
 #define StackSize (sizeof(_int) * 1024)  // in words
 
+#ifndef THREAD_PRIORITY
+#define THREAD_PRIORITY int
+#endif
+
 // Thread state
 enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
 
@@ -77,17 +81,24 @@ class Thread {
     // THEY MUST be in this position for SWITCH to work.
     int* stackTop;                        // the current stack pointer
     _int machineState[MachineStateSize];  // all registers except for stackTop
+    THREAD_PRIORITY priority;             // priority of the thread
 
    public:
     Thread(const char* debugName);  // initialize a Thread
-    ~Thread();                      // deallocate a Thread
-                                    // NOTE -- thread being deleted
-                                    // must not be running when delete
-                                    // is called
+    Thread(const char* debugName,
+           THREAD_PRIORITY priority);  // initialize a Thread with priority
+    ~Thread();                         // deallocate a Thread
+                                       // NOTE -- thread being deleted
+                                       // must not be running when delete
+                                       // is called
 
     // basic thread operations
 
     void Fork(VoidFunctionPtr func, _int arg);  // Make thread run (*func)(arg)
+    // This operation makes the thread ready to run the given function.
+
+
+
     void Yield();                               // Relinquish the CPU if any
                                                 // other thread is runnable
     void Sleep();                               // Put the thread to sleep and
@@ -98,6 +109,8 @@ class Thread {
                            // overflowed its stack
     void setStatus(ThreadStatus st) { status = st; }
     char* getName() { return (name); }
+    int getPriority() { return priority; }
+    void setPriority(THREAD_PRIORITY priority) { this->priority = priority; }
     void Print() { printf("%s, ", name); }
 
    private:
