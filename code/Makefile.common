@@ -179,6 +179,7 @@ clean:
 	rm -f `find $(arch_dir) -type f -print | egrep -v '(CVS|cvsignore)'`
 	rm -f nachos coff2noff coff2flat
 	rm -f *.noff *.flat
+	bash ../reload-placeholder.sh
 
 tmpclean:
 	rm -f tmp*
