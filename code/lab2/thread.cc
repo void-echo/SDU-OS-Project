@@ -40,21 +40,21 @@ Thread::Thread(const char *threadName) {
     stack = NULL;
     status = JUST_CREATED;
     #ifdef THREAD_PRIORITY
-    priority = 9;       // default priority is 9
+    this->priority = 9;       // default priority is 9
     #endif
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
 }
 
-Thread::Thread(const char *threadName, THREAD_PRIORITY priority) {
+Thread::Thread(const char *threadName, THREAD_PRIORITY priority_) {
     name = (char *)threadName;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
     // make sure priority is in range [0, 99]
-    priority = (priority < 0) ? 0 : (priority > 99) ? 99 : priority;
-    this->priority = priority;
+    priority_ = (priority_ < 0) ? 0 : (priority_ > 99) ? 99 : priority_;
+    this->priority = priority_;
 }
 //----------------------------------------------------------------------
 // Thread::~Thread

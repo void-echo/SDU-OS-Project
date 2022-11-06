@@ -27,7 +27,7 @@ cd ./SDU-OS-Project
 then you can make one or more components of the OS.
 
 
-## How to enhance the OS
+## How to develop our enhanced Nachos
 
 In nachos, there are many components, and you can enhance the OS by enhancing one or more components.
 
@@ -79,3 +79,10 @@ DEFINES += -DTHREADS
 endif # MAKEFILE_THREADS_LOCAL
 ```
 
+Note that Nachos cannot run correctly on Windows (at least for now), and if you modify the code on Windows, just make sure the code can be compiled on Linux.
+
+If you develop on Linux, before you commit your code, **please run `make clean` first to clean the object files and executable files.** It is not a good idea to commit binaries to Github.
+
+> You may also notice that there are some files named `placeholder`, which are all empty files. These files are used to make sure the directory structure is correct. Git cannot commit empty directories, so we use these placeholder to force git to remember the structure.
+
+Develop and enjoy!

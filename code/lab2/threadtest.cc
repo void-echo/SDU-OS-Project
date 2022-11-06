@@ -38,10 +38,13 @@ void SimpleThread(_int which) {
 
 void ThreadTest() {
     printf("ThreadTest in LAB2, Starting!\n");
-    DEBUG('t', "Entering SimpleTest");
+    DEBUG('t', "Priority Test in LAB2, Starting!\n");
 
-    Thread *t = new Thread("forked thread");
-
-    t->Fork(SimpleThread, 1);
-    SimpleThread(0);
+    for (int i = 0; i < 4; i++) {
+        char* name = new char[10];
+        sprintf(name, "Thread %d", i);
+        Thread *t = new Thread(name, i);
+        t->Fork(SimpleThread, i);
+    }
+    // SimpleThread(0);
 }
