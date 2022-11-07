@@ -1,4 +1,11 @@
+# ignore MS Office tmp files
 ~$*
 *.tmp
+
+# ignore assembly info files or other generated tmp files
 *.o
+*.obj
 *.d
+
+# ignore executables
+**/nachos

@@ -91,7 +91,11 @@ $(program): $(ofiles)
 $(bin_dir)/% :
 	@echo ">>> Linking" $@ "<<<"
 	$(LD) $(GCCOPT32) $^ $(LDFLAGS) -o $@		
-	ln -sf $@ $(notdir $@)
+# ln -sf $@ $(notdir $@)
+# The command above creates a symbolic link, but it is not usable on Windows.
+# Instead, we use the following command to create a copy of the executable.
+# Void Echo, 2022-11-07
+	cp $@ $(notdir $@)
 
 # Building object files (.o) from C++ source (.cc) files.
 # See the comment above for executables regarding multiple rules.
@@ -179,7 +183,9 @@ clean:
 	rm -f `find $(arch_dir) -type f -print | egrep -v '(CVS|cvsignore)'`
 	rm -f nachos coff2noff coff2flat
 	rm -f *.noff *.flat
-	bash ../reload-placeholder.sh
+	bash ../reload-placeholder.sh	
+# I added the line above keep the placeholder files from being deleted.
+# Void Echo, 2022-11-07
 
 tmpclean:
 	rm -f tmp*
