@@ -23,10 +23,14 @@
 
 void SimpleThread(_int which) {
     int num;
+    int times_run = 5;
 
-    for (num = 0; num < 5; num++) {
+    for (num = 0; num < times_run; num++) {
         printf("*** thread %d looped %d times\n", (int)which, num);
-        currentThread->Yield();
+        if (num != times_run - 1) {
+            // if not the last time, yield the CPU to another thread
+            currentThread->Yield();
+        }
     }
 }
 

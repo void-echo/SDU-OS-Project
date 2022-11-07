@@ -85,4 +85,14 @@ If you develop on Linux, before you commit your code, **please run `make clean` 
 
 > You may also notice that there are some files named `placeholder`, which are all empty files. These files are used to make sure the directory structure is correct. Git cannot commit empty directories, so we use these placeholder to force git to remember the structure.
 
+## Better Practice: Write On Windows, Run On Linux
+
+If you are using Windows, you can use Visual Studio Code to write the code, and use VMWare Shared Folders to share the code between Windows and Linux.
+
+This is a good practice, because you can use the powerful IDE to write the code, and use Linux to run the code. **No slow down**, no bugs, no delay, no problem.
+
+but there are some limitations: you cannot use symbolic links, but don't worry, I had already solved this problem by editing the `Makefile.common` file and adding some shell scripts.
+
+> You can now develop on Windows, and run on Linux without any need to change the `Makefile` or run any shell scripts. But, if you want enable Shared Folders, **you may have to configure your own `VMWare Settings`** to enable this feature. Chances are that you may fail to enable this feature, but don't worry, you may find [a solution](https://askubuntu.com/questions/1239726/windows-host-shared-folder-in-ubuntu-20-04) from this link.
+
 Develop and enjoy!

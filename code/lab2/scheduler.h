@@ -31,6 +31,9 @@ class Scheduler {
    private:
     List* readyList;  // queue of threads that are ready to run,
                       // but not running
+   #ifdef THREAD_AGING
+      int agingTicks;
+   #endif
 };
 
 #endif  // SCHEDULER_H

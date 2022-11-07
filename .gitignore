@@ -9,3 +9,5 @@
 
 # ignore executables
 **/nachos
+
+**/tmp-records

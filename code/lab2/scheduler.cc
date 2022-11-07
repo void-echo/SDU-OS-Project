@@ -60,7 +60,26 @@ void Scheduler::ReadyToRun(Thread *thread) {
 //	Thread is removed from the ready list.
 //----------------------------------------------------------------------
 
-Thread *Scheduler::FindNextToRun() { return (Thread *)readyList->Remove(); }
+Thread *Scheduler::FindNextToRun() {
+#ifdef THREAD_AGING
+    agingTicks++;
+    if (agingTicks >= 100) {
+        agingTicks = 0;
+        ListElement *e = readyList->getFirst();
+        while (e != NULL) {
+            Thread *t = (Thread *)e->item;
+            // priority is in range [0, 99], smaller number has higher priority.
+            bool isHighestPriority = t->getPriority() == 0;
+            if (!isHighestPriority) {
+                t->setPriority(t->getPriority() - 1);
+            }
+            e = e->next;
+        }
+    }
+#else
+    return (Thread *)readyList->Remove();
+#endif
+}
 
 //----------------------------------------------------------------------
 // Scheduler::Run

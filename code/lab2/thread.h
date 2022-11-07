@@ -55,7 +55,7 @@
 #define StackSize (sizeof(_int) * 1024)  // in words
 
 #ifndef THREAD_PRIORITY
-#define THREAD_PRIORITY int
+#define THREAD_PRIORITY int     // type of thread priority
 #endif
 
 // Thread state
