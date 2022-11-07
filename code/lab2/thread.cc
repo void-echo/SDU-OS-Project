@@ -39,9 +39,9 @@ Thread::Thread(const char *threadName) {
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-    #ifdef THREAD_PRIORITY
-    this->priority = 9;       // default priority is 9
-    #endif
+#ifdef THREAD_PRIORITY
+    this->priority = 9;  // default priority is 9
+#endif
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -69,11 +69,11 @@ Thread::Thread(const char *threadName, THREAD_PRIORITY priority_) {
 //----------------------------------------------------------------------
 
 Thread::~Thread() {
-    #ifndef THREAD_PRIORITY
+#ifndef THREAD_PRIORITY
     DEBUG('t', "Deleting thread \"%s\"\n", name);
-    #else
+#else
     DEBUG('t', "Deleting thread \"%s\" with priority %d\n", name, priority);
-    #endif
+#endif
 
     ASSERT(this != currentThread);
     if (stack != NULL)
@@ -193,10 +193,9 @@ void Thread::Yield() {
     ASSERT(this == currentThread);
 
     DEBUG('t', "Yielding thread \"%s\"\n", getName());
-
+    scheduler->ReadyToRun(this);
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {
-        scheduler->ReadyToRun(this);
         scheduler->Run(nextThread);
     }
     (void)interrupt->SetLevel(oldLevel);
