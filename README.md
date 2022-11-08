@@ -74,7 +74,7 @@ CCFILES = main.cc\
 
 INCPATH += -I- -I../lab2 -I../threads -I../machine # find in ./ directory, if not found, find in ../threads, etc. Usually, this line is the only line you need to change.
 
-DEFINES += -DTHREADS
+DEFINES += -DTHREADS # This line defines the macro THREADS, which is equal to `#define THREADS`. `DEFINES` is a special variable in Makefile.
 
 endif # MAKEFILE_THREADS_LOCAL
 ```
@@ -95,4 +95,7 @@ but there are some limitations: you cannot use symbolic links, but don't worry, 
 
 > You can now develop on Windows, and run on Linux without any need to change the `Makefile` or run any shell scripts. But, if you want enable Shared Folders, **you may have to configure your own `VMWare Settings`** to enable this feature. Chances are that you may fail to enable this feature, but don't worry, you may find [a solution](https://askubuntu.com/questions/1239726/windows-host-shared-folder-in-ubuntu-20-04) from this link.
 
-Develop and enjoy!
+
+⚠ By the way, If you find some parts too difficult to develop, feel free to contact me, I will try my best to provide help, or we can exchange our responsible project parts.
+
+**Develop and enjoy!**
