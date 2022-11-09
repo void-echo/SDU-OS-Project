@@ -1,13 +1,14 @@
-// bitmap.c 
+// bitmap.c
 //	Routines to manage a bitmap -- an array of bits each of which
 //	can be either on or off.  Represented as an array of integers.
 //
 // Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
-#include "copyright.h"
 #include "bitmap.h"
+
+#include "copyright.h"
 
 //----------------------------------------------------------------------
 // BitMap::BitMap
@@ -17,13 +18,11 @@
 //	"nitems" is the number of bits in the bitmap.
 //----------------------------------------------------------------------
 
-BitMap::BitMap(int nitems) 
-{ 
+BitMap::BitMap(int nitems) {
     numBits = nitems;
     numWords = divRoundUp(numBits, BitsInWord);
     map = new unsigned int[numWords];
-    for (int i = 0; i < numBits; i++) 
-        Clear(i);
+    for (int i = 0; i < numBits; i++) Clear(i);
 }
 
 //----------------------------------------------------------------------
@@ -31,10 +30,7 @@ BitMap::BitMap(int nitems)
 // 	De-allocate a bitmap.
 //----------------------------------------------------------------------
 
-BitMap::~BitMap()
-{ 
-    delete map;
-}
+BitMap::~BitMap() { delete map; }
 
 //----------------------------------------------------------------------
 // BitMap::Set
@@ -43,13 +39,11 @@ BitMap::~BitMap()
 //	"which" is the number of the bit to be set.
 //----------------------------------------------------------------------
 
-void
-BitMap::Mark(int which) 
-{ 
+void BitMap::Mark(int which) {
     ASSERT(which >= 0 && which < numBits);
     map[which / BitsInWord] |= 1 << (which % BitsInWord);
 }
-    
+
 //----------------------------------------------------------------------
 // BitMap::Clear
 // 	Clear the "nth" bit in a bitmap.
@@ -57,9 +51,7 @@ BitMap::Mark(int which)
 //	"which" is the number of the bit to be cleared.
 //----------------------------------------------------------------------
 
-void 
-BitMap::Clear(int which) 
-{
+void BitMap::Clear(int which) {
     ASSERT(which >= 0 && which < numBits);
     map[which / BitsInWord] &= ~(1 << (which % BitsInWord));
 }
@@ -71,15 +63,13 @@ BitMap::Clear(int which)
 //	"which" is the number of the bit to be tested.
 //----------------------------------------------------------------------
 
-bool 
-BitMap::Test(int which)
-{
+bool BitMap::Test(int which) {
     ASSERT(which >= 0 && which < numBits);
-    
+
     if (map[which / BitsInWord] & (1 << (which % BitsInWord)))
-	return TRUE;
+        return TRUE;
     else
-	return FALSE;
+        return FALSE;
 }
 
 //----------------------------------------------------------------------
@@ -91,14 +81,12 @@ BitMap::Test(int which)
 //	If no bits are clear, return -1.
 //----------------------------------------------------------------------
 
-int 
-BitMap::Find() 
-{
+int BitMap::Find() {
     for (int i = 0; i < numBits; i++)
-	if (!Test(i)) {
-	    Mark(i);
-	    return i;
-	}
+        if (!Test(i)) {
+            Mark(i);
+            return i;
+        }
     return -1;
 }
 
@@ -108,13 +96,11 @@ BitMap::Find()
 //	(In other words, how many bits are unallocated?)
 //----------------------------------------------------------------------
 
-int 
-BitMap::NumClear() 
-{
+int BitMap::NumClear() {
     int count = 0;
 
     for (int i = 0; i < numBits; i++)
-	if (!Test(i)) count++;
+        if (!Test(i)) count++;
     return count;
 }
 
@@ -126,14 +112,11 @@ BitMap::NumClear()
 //	all the bits that are set in the bitmap.
 //----------------------------------------------------------------------
 
-void
-BitMap::Print() 
-{
-    printf("Bitmap set:\n"); 
+void BitMap::Print() {
+    printf("Bitmap set:\n");
     for (int i = 0; i < numBits; i++)
-	if (Test(i))
-	    printf("%d, ", i);
-    printf("\n"); 
+        if (Test(i)) printf("%d, ", i);
+    printf("\n");
 }
 
 // These aren't needed until the FILESYS assignment
@@ -145,9 +128,7 @@ BitMap::Print()
 //	"file" is the place to read the bitmap from
 //----------------------------------------------------------------------
 
-void
-BitMap::FetchFrom(OpenFile *file) 
-{
+void BitMap::FetchFrom(OpenFile *file) {
     file->ReadAt((char *)map, numWords * sizeof(unsigned), 0);
 }
 
@@ -158,8 +139,6 @@ BitMap::FetchFrom(OpenFile *file)
 //	"file" is the place to write the bitmap to
 //----------------------------------------------------------------------
 
-void
-BitMap::WriteBack(OpenFile *file)
-{
-   file->WriteAt((char *)map, numWords * sizeof(unsigned), 0);
+void BitMap::WriteBack(OpenFile *file) {
+    file->WriteAt((char *)map, numWords * sizeof(unsigned), 0);
 }
