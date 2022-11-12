@@ -120,6 +120,12 @@ void Append(char *from, char *to, int half) {
     if (half) start = start / 2;
     openFile->Seek(start);
 
+    if (!(openFile->AppendSize(fileLength))) {
+        printf("Append: couldn't append to file %s: File is too big.\n", to);
+        fclose(fp);
+        return;
+    }
+
     // Append the data in TransferSize chunks
     buffer = new char[TransferSize];
     while ((amountRead = fread(buffer, sizeof(char), TransferSize, fp)) > 0) {
@@ -135,8 +141,8 @@ void Append(char *from, char *to, int half) {
     delete[] buffer;
 
     //  Write the inode back to the disk, because we have changed it
-    //  openFile->WriteBack();
-    //  printf("inodes have been written back\n");
+     openFile->WriteBack();
+     printf("inodes have been written back\n");
 
     // Close the UNIX and the Nachos files
     delete openFile;
