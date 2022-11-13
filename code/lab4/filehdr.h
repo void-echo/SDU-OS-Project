@@ -59,9 +59,13 @@ class FileHeader {
 
     void Print();  // Print the contents of the file.
 
+    int getSecNum() { return divRoundUp(numBytes, SectorSize); }
+
+    void updateTime();
+
    private:
     int numBytes;                // Number of bytes in the file
-    int numSectors;              // Number of data sectors in the file
+    int lastUpdatedTime;              // Number of data sectors in the file
     int dataSectors[NumDirect];  // Disk sector numbers for each data
                                  // block in the file
 };

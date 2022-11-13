@@ -26,6 +26,7 @@
 
 #include "copyright.h"
 #include "system.h"
+#include <time.h>
 
 //----------------------------------------------------------------------
 // FileHeader::Allocate
@@ -40,10 +41,11 @@
 
 bool FileHeader::Allocate(BitMap *freeMap, int fileSize) {
     numBytes = fileSize;
-    numSectors = divRoundUp(fileSize, SectorSize);
-    if (freeMap->NumClear() < numSectors) return FALSE;  // not enough space
+    updateTime();
+    // getSecNum() = divRoundUp(fileSize, SectorSize);
+    if (freeMap->NumClear() < getSecNum()) return FALSE;  // not enough space
 
-    for (int i = 0; i < numSectors; i++) dataSectors[i] = freeMap->Find();
+    for (int i = 0; i < getSecNum(); i++) dataSectors[i] = freeMap->Find();
     return TRUE;
 }
 
@@ -55,7 +57,7 @@ bool FileHeader::Allocate(BitMap *freeMap, int fileSize) {
 //----------------------------------------------------------------------
 
 void FileHeader::Deallocate(BitMap *freeMap) {
-    for (int i = 0; i < numSectors; i++) {
+    for (int i = 0; i < getSecNum(); i++) {
         ASSERT(freeMap->Test((int)dataSectors[i]));  // ought to be marked!
         freeMap->Clear((int)dataSectors[i]);
     }
@@ -122,6 +124,13 @@ bool FileHeader::Append(BitMap *freeMap, int fileSize) {
     return TRUE;
 }
 
+void FileHeader::updateTime() {
+    // time is sec num from UTC 1970.1.1 00:00:00
+    time_t now = time(NULL);
+    int nowSec = (int)now;
+    lastUpdatedTime = nowSec;
+}
+
 //----------------------------------------------------------------------
 // FileHeader::Print
 // 	Print the contents of the file header, and the contents of all
@@ -132,10 +141,10 @@ void FileHeader::Print() {                          // TODO HERE: NEED TO PRINT 
     int i, j, k;
     char *data = new char[SectorSize];
 
-    printf("FileHeader contents.  File size: %d.  File blocks:\n", numBytes);
-    for (i = 0; i < numSectors; i++) printf("%d ", dataSectors[i]);
+    printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File blocks:\n", numBytes, lastUpdatedTime);
+    for (i = 0; i < getSecNum(); i++) printf("%d ", dataSectors[i]);
     printf("\nFile contents:\n");
-    for (i = k = 0; i < numSectors; i++) {
+    for (i = k = 0; i < getSecNum(); i++) {
         synchDisk->ReadSector(dataSectors[i], data);
         for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
             if ('\040' <= data[j] && data[j] <= '\176')  // isprint(data[j])
