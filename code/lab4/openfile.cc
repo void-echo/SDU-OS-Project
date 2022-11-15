@@ -69,7 +69,6 @@ int OpenFile::Read(char *into, int numBytes) {
 }
 
 int OpenFile::Write(char *into, int numBytes) {
-    hdr->updateTime();
     int result = WriteAt(into, numBytes, seekPosition);
     seekPosition += result;
     return result;
@@ -128,6 +127,7 @@ int OpenFile::ReadAt(char *into, int numBytes, int position) {
 }
 
 int OpenFile::WriteAt(char *from, int numBytes, int position) {
+    hdr->updateTime();
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;
     bool firstAligned, lastAligned;
@@ -176,6 +176,7 @@ int OpenFile::WriteAt(char *from, int numBytes, int position) {
 int OpenFile::Length() { return hdr->FileLength(); }
 
 bool OpenFile::AppendSize(int numBytes) {
+    hdr->updateTime();
     printf("Appending!\n");
     OpenFile *mapFile = new OpenFile(0);  // bitmap header is in sector 0
     BitMap *freeMap = new BitMap(NumSectors);

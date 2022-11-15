@@ -65,7 +65,10 @@ class FileHeader {
 
    private:
     int numBytes;                // Number of bytes in the file
-    int lastUpdatedTime;              // Number of data sectors in the file
+    int lastUpdatedTime;              // Last updated time. This time format is
+                                     // the number of seconds since 00:00:00
+                                     // January 1, 1970, Coordinated Universal
+                                     // Time (UTC), minus leap seconds.
     int dataSectors[NumDirect];  // Disk sector numbers for each data
                                  // block in the file
 };

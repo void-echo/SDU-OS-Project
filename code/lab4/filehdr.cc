@@ -82,6 +82,7 @@ void FileHeader::FetchFrom(int sector) {
 //----------------------------------------------------------------------
 
 void FileHeader::WriteBack(int sector) {
+    updateTime();
     synchDisk->WriteSector(sector, (char *)this);           // TODO HERE: HOW DID THIS WORK ?
 }
 
@@ -107,6 +108,7 @@ int FileHeader::ByteToSector(int offset) {
 int FileHeader::FileLength() { return numBytes; }
 
 bool FileHeader::Append(BitMap *freeMap, int fileSize) {
+    updateTime();
     int lastSectorSpace = SectorSize - (numBytes % SectorSize);
     if (fileSize > lastSectorSpace) {
         fileSize -= lastSectorSpace; // Put in the last sector, as much as possible
