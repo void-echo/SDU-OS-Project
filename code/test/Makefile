@@ -63,7 +63,8 @@ all_flat = $(all:%=%.flat)
 all: $(all_noff) $(all_flat)
 
 $(targets): % : $(bin_dir)/%
-	ln -sf $(bin_dir)/$@ $@
+# ln -sf $(bin_dir)/$@ $@
+	cp $(bin_dir)/$@ $@
 
 CFILES = $(targets:%=%.c)
 
@@ -84,14 +85,14 @@ $(all_coff): $(obj_dir)/%.coff: $(obj_dir)/start.o $(obj_dir)/%.o
 $(all_noff): $(bin_dir)/%.noff: $(obj_dir)/%.coff
 	@echo ">>> Converting to noff file:" $@ "<<<"
 	$(coff2noff) $^ $@
-	ln -sf $@ $(notdir $@)
-
+# ln -sf $@ $(notdir $@)
+	cp $@ $(notdir $@)
 
 $(all_flat): $(bin_dir)/%.flat: $(obj_dir)/%.coff
 	@echo ">>> Converting to flat file:" $@ "<<<"
 	$(coff2flat) $^ $@
-	ln -sf $@ $(notdir $@)
-
+# ln -sf $@ $(notdir $@)
+	cp $@ $(notdir $@)
 
 %.s: %.c
 	@echo ">>> Compiling .s file for" $< "<<<"

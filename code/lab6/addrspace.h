@@ -15,6 +15,8 @@
 
 #include "copyright.h"
 #include "filesys.h"
+#include "bitmap.h"
+#include "translate.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
 
@@ -30,6 +32,8 @@ class AddrSpace {
 
     void SaveState();			// Save/restore address space-specific
     void RestoreState();		// info on a context switch 
+
+    void Print();
 
   private:
     TranslationEntry *pageTable;	// Assume linear page table translation

@@ -23,6 +23,11 @@
 #include "copyright.h"
 #include "interrupt.h"
 #include "system.h"
+#include "syscall.h"
+#include "machine.h"
+#include "console.h"
+#include "addrspace.h"
+#include "synch.h"
 
 // String definitions for debugging messages
 
