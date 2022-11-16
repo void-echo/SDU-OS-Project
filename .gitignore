@@ -8,6 +8,6 @@
 *.d
 
 # ignore executables
-**/nachos
+# **/nachos
 
 **/tmp-records
