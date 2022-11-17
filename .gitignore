@@ -6,6 +6,8 @@
 *.o
 *.obj
 *.d
+*.coff
+*.flat
 
 # ignore executables
 # **/nachos

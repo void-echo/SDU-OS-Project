@@ -27,7 +27,8 @@
 //	object file header, in case the file was generated on a little
 //	endian machine, and we're now running on a big endian machine.
 //----------------------------------------------------------------------
-
+bool* spaceIds = new bool[MAX_THREAD_COUNT];
+int spaceIdCount = 0;
 static void SwapHeader(NoffHeader *noffH) {
     noffH->noffMagic = WordToHost(noffH->noffMagic);
     noffH->code.size = WordToHost(noffH->code.size);
@@ -55,6 +56,12 @@ static void SwapHeader(NoffHeader *noffH) {
 //
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
+
+static BitMap* memoryMap = new BitMap(NumPhysPages);
+// It is called `bitmap`, but in fact it have nothing to do with file system.
+// In nachos, page size is 128 bytes, which is equal to the size of a sector.
+// so it is a good idea to use bitmap to record the memory usage. 
+bool memoryMapInitialized = false;
 
 AddrSpace::AddrSpace(OpenFile *executable) {
     NoffHeader noffH;
@@ -84,7 +91,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;  // for now, virtual page # = phys page #
-        pageTable[i].physicalPage = i;
+        pageTable[i].physicalPage = memoryMap->Find();
         pageTable[i].valid = TRUE;
         pageTable[i].use = FALSE;
         pageTable[i].dirty = FALSE;
@@ -110,6 +117,19 @@ AddrSpace::AddrSpace(OpenFile *executable) {
         executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
                            noffH.initData.size, noffH.initData.inFileAddr);
     }
+
+    mySpaceId = spaceIdCount++;
+    if (mySpaceId >= MAX_THREAD_COUNT) {
+        // set printf color to red
+        printf("\033[31m");
+        printf("Too many threads!\n");
+        printf("Please increase MAX_THREAD_COUNT in addrspace.h\n");
+        printf("machine halt\n");
+        // set printf color to white
+        printf("\033[0m");
+        ASSERT(false);
+    }
+    spaceIds[spaceIdCount] = true;
 }
 
 //----------------------------------------------------------------------
@@ -117,7 +137,13 @@ AddrSpace::AddrSpace(OpenFile *executable) {
 // 	Dealloate an address space.  Nothing for now!
 //----------------------------------------------------------------------
 
-AddrSpace::~AddrSpace() { delete[] pageTable; }
+AddrSpace::~AddrSpace() { 
+    for (int i = 0; i < numPages; i++) {
+        memoryMap->Clear(pageTable[i].physicalPage);
+    }
+    delete[] pageTable;
+    spaceIds[mySpaceId] = false;
+}
 
 //----------------------------------------------------------------------
 // AddrSpace::InitRegisters
