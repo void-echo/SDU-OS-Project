@@ -27,7 +27,7 @@
 //	object file header, in case the file was generated on a little
 //	endian machine, and we're now running on a big endian machine.
 //----------------------------------------------------------------------
-bool* spaceIds = new bool[MAX_THREAD_COUNT];
+bool *spaceIds = new bool[MAX_THREAD_COUNT];
 int spaceIdCount = 0;
 static void SwapHeader(NoffHeader *noffH) {
     noffH->noffMagic = WordToHost(noffH->noffMagic);
@@ -57,10 +57,10 @@ static void SwapHeader(NoffHeader *noffH) {
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-static BitMap* memoryMap = new BitMap(NumPhysPages);
+static BitMap *memoryMap = new BitMap(NumPhysPages);
 // It is called `bitmap`, but in fact it have nothing to do with file system.
 // In nachos, page size is 128 bytes, which is equal to the size of a sector.
-// so it is a good idea to use bitmap to record the memory usage. 
+// so it is a good idea to use bitmap to record the memory usage.
 bool memoryMapInitialized = false;
 
 AddrSpace::AddrSpace(OpenFile *executable) {
@@ -73,17 +73,22 @@ AddrSpace::AddrSpace(OpenFile *executable) {
         SwapHeader(&noffH);
     ASSERT(noffH.noffMagic == NOFFMAGIC);
 
+    int codePageNumber = divRoundUp(noffH.code.size, PageSize);
+    int initDataPageNumber = divRoundUp(noffH.initData.size, PageSize);
+
     // how big is address space?
-    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size +
-           UserStackSize;  // we need to increase the size
-                           // to leave room for the stack
+    // size = noffH.code.size + noffH.initData.size + noffH.uninitData.size +
+    //        UserStackSize;
+
+    size = codePageNumber * PageSize + initDataPageNumber * PageSize +
+           noffH.uninitData.size + UserStackSize;
+    // we need to increase the size to leave room for the stack
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
 
-    ASSERT(numPages <= NumPhysPages);  // check we're not trying
-                                       // to run anything too big --
-                                       // at least until we have
-                                       // virtual memory
+    ASSERT(numPages <= NumPhysPages);
+    // check we're not trying to run anything too big -- at least until we have
+    // virtual memory
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", numPages,
           size);
@@ -95,9 +100,9 @@ AddrSpace::AddrSpace(OpenFile *executable) {
         pageTable[i].valid = TRUE;
         pageTable[i].use = FALSE;
         pageTable[i].dirty = FALSE;
-        pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
-                                        // a separate page, we could set its
-                                        // pages to be read-only
+        pageTable[i].readOnly = FALSE;
+        // if the code segment was entirely on a separate page, we could set its
+        // pages to be read-only
     }
 
     // zero out the entire address space, to zero the unitialized data segment
@@ -108,15 +113,27 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     if (noffH.code.size > 0) {
         DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",
               noffH.code.virtualAddr, noffH.code.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
-                           noffH.code.size, noffH.code.inFileAddr);
+        // executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
+        //                    noffH.code.size, noffH.code.inFileAddr);
+        for (int i = 0; i < codePageNumber; i++) {
+            executable->ReadAt(
+                &(machine->mainMemory[pageTable[i].physicalPage * PageSize]),
+                PageSize, noffH.code.inFileAddr + i * PageSize);
+        }
     }
     if (noffH.initData.size > 0) {
         DEBUG('a', "Initializing data segment, at 0x%x, size %d\n",
               noffH.initData.virtualAddr, noffH.initData.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
-                           noffH.initData.size, noffH.initData.inFileAddr);
+        // executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
+        //                    noffH.initData.size, noffH.initData.inFileAddr);
+        for (int i = 0; i < initDataPageNumber; i++) {
+            executable->ReadAt(
+                &(machine->mainMemory[pageTable[codePageNumber + i].physicalPage *
+                                      PageSize]),
+                PageSize, noffH.initData.inFileAddr + i * PageSize);
+        }
     }
+    Print(); 
 
     mySpaceId = spaceIdCount++;
     if (mySpaceId >= MAX_THREAD_COUNT) {
@@ -130,6 +147,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
         ASSERT(false);
     }
     spaceIds[spaceIdCount] = true;
+    printf("mySpaceId: %d\n", mySpaceId);
 }
 
 //----------------------------------------------------------------------
@@ -137,7 +155,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
 // 	Dealloate an address space.  Nothing for now!
 //----------------------------------------------------------------------
 
-AddrSpace::~AddrSpace() { 
+AddrSpace::~AddrSpace() {
     for (int i = 0; i < numPages; i++) {
         memoryMap->Clear(pageTable[i].physicalPage);
     }
