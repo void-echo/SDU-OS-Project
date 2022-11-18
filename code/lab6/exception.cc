@@ -76,6 +76,11 @@ void ExceptionHandler(ExceptionType which) {
         interrupt->Exec(filename);
         printf("------------------- after exec  -------------------\n");
         AdvancePC();
+    } else if ((which == SyscallException) && (type == SC_PrintInt)) {
+        DEBUG('a', "Exit, initiated by user program.\n");
+        interrupt->PrintInt(machine->ReadRegister(4));
+        printf("reg4: %d\n", machine->ReadRegister(4));
+        AdvancePC();
     }
     
     else {

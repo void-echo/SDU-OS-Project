@@ -8,6 +8,7 @@
 *.d
 *.coff
 *.flat
+**/objects/*
 
 # ignore executables
 # **/nachos

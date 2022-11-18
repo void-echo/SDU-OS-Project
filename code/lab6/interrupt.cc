@@ -266,6 +266,10 @@ void Interrupt::Exec(char* filename) {
     machine->WriteRegister(2, space->getSpaceId());
     currentThread->Yield();
 }
+void Interrupt::PrintInt(int n) {
+    printf("in printInt\n");
+    printf("----- PrintInt: %d -----\n", n);
+}
 //----------------------------------------------------------------------
 // Interrupt::Schedule
 // 	Arrange for the CPU to be interrupted when simulated time

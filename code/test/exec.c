@@ -8,8 +8,9 @@ int
 main()
 {
     SpaceId pid;
-    // PrintInt(12345);
+    PrintInt(12345);
     pid = Exec("../test/halt.noff");
+    PrintInt(114514);
     Halt();
     /* not reached */
 }

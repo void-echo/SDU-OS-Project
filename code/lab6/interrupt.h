@@ -102,6 +102,8 @@ class Interrupt {
 
     void Exec(char* filename);  // run a user program
 
+    void PrintInt(int n);  // print an integer
+
     void YieldOnReturn();  // cause a context switch on return
                            // from an interrupt handler
 
