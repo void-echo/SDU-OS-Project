@@ -46,9 +46,9 @@ void ThreadTest() {
 
     for (int i = 0; i < 4; i++) {
         char* name = new char[10];
-        sprintf(name, "Thread %d", i);
-        Thread *t = new Thread(name, i);
-        t->Fork(SimpleThread, i);
+        sprintf(name, "Thread %d", 4-i);
+        Thread *t = new Thread(name, 4-i);
+        t->Fork(SimpleThread, 4-i);
     }
     // SimpleThread(0);
 }

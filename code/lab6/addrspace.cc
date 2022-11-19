@@ -95,7 +95,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     // first, set up the translation
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
-        pageTable[i].virtualPage = i;  // for now, virtual page # = phys page #
+        pageTable[i].virtualPage = i; 
         pageTable[i].physicalPage = memoryMap->Find();
         pageTable[i].valid = TRUE;
         pageTable[i].use = FALSE;

@@ -162,7 +162,7 @@ void Interrupt::OneTick() {
         ;
     ChangeLevel(IntOff, IntOn);  // re-enable interrupts
     if (yieldOnReturn) {         // if the timer device handler asked
-                          // for a context switch, ok to do it now
+                                 // for a context switch, ok to do it now
         yieldOnReturn = FALSE;
         status = SystemMode;  // yield is a kernel routine
         currentThread->Yield();
@@ -231,12 +231,10 @@ void Interrupt::Halt() {
     Cleanup();  // Never returns.
 }
 
-Thread* thread;
+Thread *thread;
 AddrSpace *space;
 
-void
-StartProcess(int n)
-{
+void StartProcess(int n) {
     currentThread->space = space;
 
     currentThread->space->InitRegisters();
@@ -246,9 +244,8 @@ StartProcess(int n)
     ASSERT(FALSE);
 }
 
-
-void Interrupt::Exec(char* filename) {
-    OpenFile* executable = fileSystem->Open(filename);
+void Interrupt::Exec(char *filename) {
+    OpenFile *executable = fileSystem->Open(filename);
     // printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ In Exec\n");
     printf("Exec filename: %s\n", filename);
     if (executable == NULL) {
@@ -257,17 +254,13 @@ void Interrupt::Exec(char* filename) {
     }
     space = new AddrSpace(executable);
     delete executable;  // close file
-    // concact two strings into one const char*
-    // char* threadName = new char[10 + strlen(filename)];
-    // strcpy(threadName, "Thread: ");
     thread = new Thread("another thread");
     // printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ another thread created\n");
     thread->Fork(StartProcess, 1);
-    machine->WriteRegister(2, space->getSpaceId());
+    machine->WriteRegister(2, space->getSpaceId());     // return space id
     currentThread->Yield();
 }
 void Interrupt::PrintInt(int n) {
-    printf("in printInt\n");
     printf("----- PrintInt: %d -----\n", n);
 }
 //----------------------------------------------------------------------

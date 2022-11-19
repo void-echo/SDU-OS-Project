@@ -4,13 +4,11 @@
 
 #include "syscall.h"
 
-int
-main()
-{
+int main() {
     SpaceId pid;
     PrintInt(12345);
     pid = Exec("../test/halt.noff");
-    PrintInt(114514);
+    PrintInt(114514);   // This line should not be printed
     Halt();
     /* not reached */
 }
