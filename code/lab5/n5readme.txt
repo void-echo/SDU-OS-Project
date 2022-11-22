@@ -39,6 +39,7 @@ ls --full-time test/huge    # 对比检查Nachos文件huge的修改时间应与t
 ./n5 -r medium
 ./n5 -DI
 
+
 对自己编写生成的程序，命令行为：
 reset
 rm -f DISK
