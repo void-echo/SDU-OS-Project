@@ -11,6 +11,9 @@
 **/objects
 **/REFSTR0*
 **/SWAP0
+.vscode
+**/DISK
+**/nahcos
 
 # ignore executables
 # **/nachos
