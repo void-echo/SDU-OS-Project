@@ -63,6 +63,8 @@ class FileHeader {
 
     void updateTime();
 
+    void setTime(int given_time) { lastUpdatedTime = given_time; }
+
    private:
     int numBytes;                // Number of bytes in the file
     int lastUpdatedTime;              // Last updated time. This time format is

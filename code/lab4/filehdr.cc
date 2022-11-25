@@ -41,7 +41,6 @@
 
 bool FileHeader::Allocate(BitMap *freeMap, int fileSize) {
     numBytes = fileSize;
-    updateTime();
     // getSecNum() = divRoundUp(fileSize, SectorSize);
     if (freeMap->NumClear() < getSecNum()) return FALSE;  // not enough space
 
@@ -82,7 +81,6 @@ void FileHeader::FetchFrom(int sector) {
 //----------------------------------------------------------------------
 
 void FileHeader::WriteBack(int sector) {
-    updateTime();
     synchDisk->WriteSector(sector, (char *)this);           // TODO HERE: HOW DID THIS WORK ?
 }
 
@@ -143,7 +141,14 @@ void FileHeader::Print() {                          // TODO HERE: NEED TO PRINT 
     int i, j, k;
     char *data = new char[SectorSize];
 
-    printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File blocks:\n", numBytes, lastUpdatedTime);
+    // printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File blocks:\n", numBytes, lastUpdatedTime);
+    printf("FileHeader contents.  File size: %d,  Last Updated Time: ", numBytes);
+    time_t ___time___ = lastUpdatedTime;
+    struct tm *ptm = localtime(&___time___);
+    // lastUpdatedTime is sec num from UTC 1970.1.1 00:00:00
+    // print time in readable format
+    printf("%d-%d-%d %d:%d:%d", ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    printf(",  File blocks:\n");
     for (i = 0; i < getSecNum(); i++) printf("%d ", dataSectors[i]);
     printf("\nFile contents:\n");
     for (i = k = 0; i < getSecNum(); i++) {
