@@ -17,7 +17,7 @@
 #include "bitmap.h"
 #include "disk.h"
 
-#define NumDirect (int)((SectorSize - 2 * sizeof(int)) / sizeof(int)) 
+#define NumDirect (int)((SectorSize - 2 * sizeof(int)) / sizeof(int))
 #define NumDirect2 (int)(SectorSize / sizeof(int))
 #define MaxFileSize ((NumDirect + NumDirect2) * SectorSize)
 
@@ -64,13 +64,15 @@ class FileHeader {
 
     void updateTime();
 
+    void setTime(int given_time) { lastUpdatedTime = given_time; }
+
    private:
-    int numBytes;                // Number of bytes in the file
-    //int numSectors;
-    int lastUpdatedTime;              // Last updated time. This time format is
-                                     // the number of seconds since 00:00:00
-                                     // January 1, 1970, Coordinated Universal
-                                     // Time (UTC), minus leap seconds.
+    int numBytes;  // Number of bytes in the file
+    // int numSectors;
+    int lastUpdatedTime;         // Last updated time. This time format is
+                                 // the number of seconds since 00:00:00
+                                 // January 1, 1970, Coordinated Universal
+                                 // Time (UTC), minus leap seconds.
     int dataSectors[NumDirect];  // Disk sector numbers for each data
                                  // block in the file
 };

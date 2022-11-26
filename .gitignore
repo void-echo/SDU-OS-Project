@@ -13,7 +13,8 @@
 **/SWAP0
 .vscode
 **/DISK
-**/nahcos
+
+**/nachos
 
 # ignore executables
 # **/nachos

@@ -127,7 +127,7 @@ int OpenFile::ReadAt(char *into, int numBytes, int position) {
 }
 
 int OpenFile::WriteAt(char *from, int numBytes, int position) {
-    hdr->updateTime();
+    // hdr->updateTime();
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;
     bool firstAligned, lastAligned;
@@ -194,3 +194,7 @@ bool OpenFile::AppendSize(int numBytes) {
 }
 
 void OpenFile::WriteBack() { hdr->WriteBack(headSector); }
+
+void OpenFile::setTime(int given_time) {
+    hdr->setTime(given_time);
+}

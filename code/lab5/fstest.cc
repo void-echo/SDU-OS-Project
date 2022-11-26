@@ -11,6 +11,7 @@
 // Copyright (c) 1992-1993 The Regents of the University of California.
 // All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
+#include <sys/stat.h>
 
 #include "copyright.h"
 #include "directory.h"
@@ -45,6 +46,13 @@ void Copy(char *from, char *to) {
     fileLength = ftell(fp);
     fseek(fp, 0, 0);
 
+    // get file last modified time in UTC format
+    struct stat fileStat;
+    stat(from, &fileStat);
+    time_t lastModified = fileStat.st_mtime;
+    int lastModifiedInt = (int)lastModified;
+    // printf("last modified time: %d\n", lastModifiedInt);
+
     // Create a Nachos file of the same length
     DEBUG('f', "Copying file %s, size %d, to file %s\n", from, fileLength, to);
     if (!fileSystem->Create(to, fileLength)) {  // Create Nachos file
@@ -61,7 +69,9 @@ void Copy(char *from, char *to) {
     while ((amountRead = fread(buffer, sizeof(char), TransferSize, fp)) > 0)
         openFile->Write(buffer, amountRead);
     delete[] buffer;
-
+    openFile = fileSystem->Open(to);
+    openFile->setTime(lastModifiedInt);
+    openFile->WriteBack();
     // Close the UNIX and the Nachos files
     delete openFile;
     fclose(fp);
@@ -141,8 +151,8 @@ void Append(char *from, char *to, int half) {
     delete[] buffer;
 
     //  Write the inode back to the disk, because we have changed it
-     openFile->WriteBack();
-     printf("inodes have been written back\n");
+    openFile->WriteBack();
+    printf("inodes have been written back\n");
 
     // Close the UNIX and the Nachos files
     delete openFile;
@@ -249,7 +259,6 @@ void Print(char *name) {
     delete openFile;  // close the Nachos file
     return;
 }
-
 
 //----------------------------------------------------------------------
 // PerformanceTest

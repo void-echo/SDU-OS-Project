@@ -94,6 +94,7 @@ class OpenFile {
 
     void WriteBack();  // Write modifications to file header
                        // back to disk
+    void setTime(int given_time);
 
    private:
     FileHeader *hdr;   // Header for this file
