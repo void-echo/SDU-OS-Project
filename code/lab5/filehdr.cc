@@ -39,7 +39,6 @@
 //----------------------------------------------------------------------
 
 bool FileHeader::Allocate(BitMap *freeMap, int fileSize){
-    printf("Allocate:\n");
     numBytes = fileSize;
     printf("fileSize: %d \n", fileSize);
     //numSectors = divRoundUp(fileSize, SectorSize);
@@ -84,29 +83,25 @@ bool FileHeader::Allocate(BitMap *freeMap, int fileSize){
 //----------------------------------------------------------------------
 
 void FileHeader::Deallocate(BitMap *freeMap) {
-    printf("Deallocate:\n");
     int lastIndex = NumDirect - 1;
-    if(dataSectors[lastIndex] == -1){  // only one index
-	for (int i = 0; i < getSecNum(); i++) {
-            ASSERT(freeMap->Test((int)dataSectors[i])); 
+    if(dataSectors[lastIndex]==-1){//没用到二级索引的时候的释放
+        for(int i=0;i<getSecNum();i++){
+            ASSERT(freeMap->Test((int)dataSectors[i]));
             freeMap->Clear((int)dataSectors[i]);
         }
-
-    }else{
-
-	for (int i = 0; i < lastIndex; i++) {
-            ASSERT(freeMap->Test((int)dataSectors[i])); 
+    } else{//用到了二级索引
+        int i;
+        for(i=0;i<lastIndex;i++){//先把一级索引释放了
+            ASSERT(freeMap->Test((int)dataSectors[i]));
             freeMap->Clear((int)dataSectors[i]);
         }
-
         int dataSector2[NumDirect2];
-	synchDisk -> ReadSector(dataSectors[lastIndex],(char*)dataSector2);  //find the second inode
-
-	for (int i = 0; i < getSecNum(); i++) {
-            freeMap->Clear((int)dataSector2[i-lastIndex]);
+        synchDisk->ReadSector(dataSectors[lastIndex],(char*)dataSector2);//先找到二级索引节点
+        freeMap->Clear((int)dataSectors[lastIndex]);
+        for(i;i<getSecNum();i++){
+            freeMap->Clear((int)dataSector2[i-lastIndex]);//释放二级索引节点内容
         }
     }
-    
 }
 
 //----------------------------------------------------------------------
@@ -117,7 +112,6 @@ void FileHeader::Deallocate(BitMap *freeMap) {
 //----------------------------------------------------------------------
 
 void FileHeader::FetchFrom(int sector) {
-    printf("FetchFrom:\n");
     synchDisk->ReadSector(sector, (char *)this);
 }
 
@@ -129,7 +123,6 @@ void FileHeader::FetchFrom(int sector) {
 //----------------------------------------------------------------------
 
 void FileHeader::WriteBack(int sector) {
-    printf("WriteBack:\n");
     updateTime();
     synchDisk->WriteSector(sector, (char *)this);           // TODO HERE: HOW DID THIS WORK ?
 }
@@ -145,7 +138,15 @@ void FileHeader::WriteBack(int sector) {
 //----------------------------------------------------------------------
 
 int FileHeader::ByteToSector(int offset) {
-    return (dataSectors[offset / SectorSize]);
+    int lastIndex = NumDirect - 1;
+    if(offset/SectorSize<lastIndex){
+        return (dataSectors[offset/SectorSize]);
+    }else{
+        int dataSectors2[NumDirect2];
+        synchDisk->ReadSector(dataSectors[lastIndex], (char *)dataSectors2);
+        return (dataSectors2[offset / SectorSize - lastIndex]);
+    }
+
 }
 
 //----------------------------------------------------------------------
@@ -179,10 +180,8 @@ bool FileHeader::Append(BitMap *freeMap, int fileSize) {
 
         //int AppendSector = divRoundUp(moreFileSize,SectorSize); //caculate the sector numbers need to be extend
         //numSectors = numSectors + AppendSector;
-        printf("in Append: numSectors: %d \n",getSecNum());
 
         int lastIndex = NumDirect - 1;
-	printf("in Append: lastIndex: %d \n",lastIndex);  //29
 
 
         if(dataSectors[lastIndex] == -1){
@@ -197,21 +196,17 @@ bool FileHeader::Append(BitMap *freeMap, int fileSize) {
 		    dataSectors[i] = freeMap -> Find(); // allocate the first inode
 		}
 		dataSectors[lastIndex] = freeMap -> Find();  // set the sector of the second inode to the last of the first inode
-		printf("in Append: dataSectors[lastIndex]: %d \n",dataSectors[lastIndex]);  
 		int dataSector2[NumDirect2];
 		for(;i<getSecNum();i++){
 		    dataSector2[i-lastIndex] = freeMap -> Find(); // allocate the second inode
-	            printf("in Append: freeMap -> Find() %d in second inode  \n", dataSector2[i-lastIndex]);  
 		}
 		synchDisk -> WriteSector(dataSectors[lastIndex],(char*)dataSector2);  //write back		
 	    }
 	}else{// have use the second inode, but the extend files haven't exceed the size of second inode
-	    printf("in Append: dataSectors[29]: %d \n",dataSectors[lastIndex]);  //29
 	    int dataSector2[NumDirect2];
 	    synchDisk -> ReadSector(dataSectors[lastIndex],(char*)dataSector2);  //find the second inode
 	    for(;i<getSecNum();i++){
 	        dataSector2[i-lastIndex] = freeMap -> Find(); // allocate the second inode
-	        printf("in Append: freeMap -> Find() %d in second inode  \n", dataSector2[i-lastIndex]);  //29
 	    }
 	    synchDisk -> WriteSector(dataSectors[lastIndex],(char*)dataSector2);  //write back
 	}
@@ -237,21 +232,60 @@ void FileHeader::updateTime() {
 
 void FileHeader::Print() { // TODO HERE: NEED TO PRINT FULL FILE CONTENTS
     printf("Print:\n");
-    int i, j, k;
+    int i, j, k;    
+    int lastIndex = NumDirect -1;
     char *data = new char[SectorSize];
 
-    printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File blocks:\n", numBytes, lastUpdatedTime);
-    for (i = 0; i < getSecNum(); i++) printf("%d ", dataSectors[i]);
-    printf("\nFile contents:\n");
-    for (i = k = 0; i < getSecNum(); i++) {
-        synchDisk->ReadSector(dataSectors[i], data);
-        for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
-            if ('\040' <= data[j] && data[j] <= '\176')  // isprint(data[j])
-                printf("%c", data[j]);
-            else
-                printf("\\%x", (unsigned char)data[j]);
+    if(dataSectors[lastIndex]==-1){
+        printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File blocks:\n", numBytes, lastUpdatedTime);
+        for (i = 0; i < getSecNum(); i++) printf("%d ", dataSectors[i]);
+        printf("\nFile contents:\n");
+        for (i = k = 0; i < getSecNum(); i++) {
+            synchDisk->ReadSector(dataSectors[i], data);
+            for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
+                if ('\040' <= data[j] && data[j] <= '\176')  // isprint(data[j])
+                    printf("%c", data[j]);
+                else
+                    printf("\\%x", (unsigned char)data[j]);
         }
         printf("\n");
+        }
+        delete[] data;
+    }else{
+        int dataSectors2[NumDirect2];
+        synchDisk->ReadSector(dataSectors[lastIndex], (char *)dataSectors2);
+        printf("FileHeader contents. File size: %d. File blocks:\n", numBytes);
+        for (i = 0; i < lastIndex; i++)
+            printf("%d ", dataSectors[i]);
+        for(; i < getSecNum(); i++)
+            printf("%d ", dataSectors2[i - lastIndex]);
+        printf("\nFile contents:\n");
+        for (i = k = 0; i < lastIndex; i++) {
+            synchDisk->ReadSector(dataSectors[i], data);
+            for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
+                if ('\040' <= data[j] && data[j] <= '\176')
+                    printf("%c", data[j]);
+                else
+                    printf("\\%x", (unsigned char)data[j]);
+            }
+            printf("\n");
+        }
+        for( ; i < getSecNum(); i++) {
+            synchDisk->ReadSector(dataSectors2[i - lastIndex], data);
+            for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
+                if ('\040' <= data[j] && data[j] <= '\176')
+                    printf("%c", data[j]);
+                else
+                    printf("\\%x", (unsigned char)data[j]);
+            }
+            printf("\n");
+        }
+
+         delete[] data;
+
     }
-    delete[] data;
 }
+
+
+
+

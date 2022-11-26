@@ -46,11 +46,14 @@ class BitMap {
     int NumClear();		// Return the number of clear bits
 
     void Print();		// Print contents of bitmap
+
+    
     
     // These aren't needed until FILESYS, when we will need to read and 
     // write the bitmap to a file
     void FetchFrom(OpenFile *file); 	// fetch contents from disk 
     void WriteBack(OpenFile *file); 	// write contents to disk
+    int  getUsedBitsNumber();
 
   private:
     int numBits;			// number of bits in the bitmap

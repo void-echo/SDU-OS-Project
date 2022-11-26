@@ -70,6 +70,7 @@ class Directory {
     void Print();			// Verbose print of the contents
 					//  of the directory -- all the file
 					//  names and their contents.
+    void DiskMessage();
 
   private:
     int tableSize;			// Number of directory entries

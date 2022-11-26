@@ -52,6 +52,7 @@
 
 #include "utility.h"
 #include "system.h"
+#include "bitmap.h"
 
 // External functions used by this file
 
@@ -61,6 +62,8 @@ extern void NAppend(char *nachosFileFrom, char *nachosFileTo);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+extern void DiskMessage();
+
 
 
 //----------------------------------------------------------------------
@@ -147,6 +150,8 @@ main(int argc, char **argv)
             fileSystem->Print();
 	} else if (!strcmp(*argv, "-t")) {	// performance test
             PerformanceTest();
+	} else if (!strcmp(*argv, "-DI")){
+			fileSystem->DiskMessage();
 	}
 #endif // FILESYS
 #ifdef NETWORK

@@ -1,0 +1,57 @@
+liang@ubuntu:~/Desktop/nachos-3.4-ualr-2022/code/lab5$ ./n5 -ap test/small samllNo threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+Ticks: total 183020, idle 182200, system 820, user 0
+Disk I/O: reads 17, writes 10
+Console I/O: reads 0, writes 0
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...
+liang@ubuntu:~/Desktop/nachos-3.4-ualr-2022/code/lab5$ ./n5 -DI
+Disk size: 1024 sectors, 131072 bytes.
+Used: 47 sectors, 6016 bytes.
+Free: 977 sectors, 125056 bytes.
+4902 bytes in 2 files, occupy 4992 bytes(39 sectors).
+90 bytes of internal fragmentation in 1 sectors.
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+Ticks: total 7020, idle 6800, system 220, user 0
+Disk I/O: reads 7, writes 0
+Console I/O: reads 0, writes 0
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...
+liang@ubuntu:~/Desktop/nachos-3.4-ualr-2022/code/lab5$ ^C
+liang@ubuntu:~/Desktop/nachos-3.4-ualr-2022/code/lab5$ ./n5 -cp test/small smallNo threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+Ticks: total 152020, idle 151350, system 670, user 0
+Disk I/O: reads 13, writes 9
+Console I/O: reads 0, writes 0
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...
+liang@ubuntu:~/Desktop/nachos-3.4-ualr-2022/code/lab5$ ./n5 -DI
+Disk size: 1024 sectors, 131072 bytes.
+Used: 49 sectors, 6272 bytes.
+Free: 975 sectors, 124800 bytes.
+4940 bytes in 3 files, occupy 5120 bytes(40 sectors).
+180 bytes of internal fragmentation in 2 sectors.
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+Ticks: total 8020, idle 7770, system 250, user 0
+Disk I/O: reads 8, writes 0
+Console I/O: reads 0, writes 0
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...

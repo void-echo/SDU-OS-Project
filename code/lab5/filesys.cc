@@ -303,6 +303,34 @@ FileSystem::List()
 }
 
 //----------------------------------------------------------------------
+// FileSystem::DiskMessage
+// 	List all the files in the file system directory.
+//----------------------------------------------------------------------
+void
+FileSystem::DiskMessage() {
+    // printf("Bitmap DiskMessage: \n");
+    FileHeader *bitHdr = new FileHeader;
+    FileHeader *dirHdr = new FileHeader;
+    BitMap *freeMap = new BitMap(NumSectors);
+    Directory *directory = new Directory(NumDirEntries);
+
+    printf("Disk size: %d sectors, %d  bytes. \n", NumSectors, NumSectors*128);
+
+    freeMap->FetchFrom(freeMapFile);
+    int usedBits = freeMap->getUsedBitsNumber();
+
+    printf("Used: %d  sectors, %d  bytes.\n",usedBits,usedBits*128);
+    printf("Free: %d  sectors, %d  bytes.\n",NumSectors-usedBits,(NumSectors-usedBits)*128);
+
+    directory->FetchFrom(directoryFile);
+    directory->DiskMessage();
+    delete directory;
+   // printf("Disk size: %d sectors, %d bytes.",getSecNum(),numBytes);
+    //printf("Used:  sectors, %d bytes. \n", numBits);
+}
+
+
+//----------------------------------------------------------------------
 // FileSystem::Print
 // 	Print everything about the file system:
 //	  the contents of the bitmap

@@ -136,6 +136,19 @@ BitMap::Print()
     printf("\n"); 
 }
 
+int 
+BitMap::getUsedBitsNumber() 
+{
+    int count = 0;
+    for (int i = 0; i < numBits; i++){
+        if (Test(i)){
+            count++;
+        }
+    }
+    return  count;
+}
+
+
 // These aren't needed until the FILESYS assignment
 
 //----------------------------------------------------------------------
@@ -148,9 +161,7 @@ BitMap::Print()
 void
 BitMap::FetchFrom(OpenFile *file) 
 {
-    printf("begin fetch from ! \n");	
     file->ReadAt((char *)map, numWords * sizeof(unsigned), 0);
-    printf("fetch from success! \n");	
 }
 
 //----------------------------------------------------------------------
@@ -163,7 +174,5 @@ BitMap::FetchFrom(OpenFile *file)
 void
 BitMap::WriteBack(OpenFile *file)
 {
-    printf("begin write back ! \n");
     file->WriteAt((char *)map, numWords * sizeof(unsigned), 0);
-    printf("write back success! \n");
 }

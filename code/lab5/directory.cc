@@ -195,3 +195,38 @@ Directory::Print()
     printf("\n");
     delete hdr;
 }
+
+void
+Directory::DiskMessage(){
+    FileHeader *hdr = new FileHeader;
+    BitMap *bitmap;
+    int sectorSum = 0;
+    int fileSize = 0;
+    int count=0;
+
+    int sectorsFragmentation = 0;
+    int fragmentation = 0;
+
+    for (int i = 0; i < tableSize; i++)
+        if (table[i].inUse) {
+            count++;
+            // printf("Name: %s, Sector: %d\n", table[i].name, table[i].sector);
+            hdr->FetchFrom(table[i].sector);
+            sectorSum += hdr->getSecNum();
+            fileSize += hdr->FileLength();
+
+            if(fileSize%128 == 0){
+                sectorsFragmentation += 0;
+            }else{
+                fragmentation += hdr->getSecNum()*128 - hdr->FileLength();
+                sectorsFragmentation +=  1;
+            }
+            //hdr->Print();
+        }
+
+    printf("%d bytes in %d files, occupy %d bytes(%d sectors). \n", fileSize, count, sectorSum*128, sectorSum);
+    printf("%d bytes of internal fragmentation in %d sectors. \n", fragmentation, sectorsFragmentation);
+
+
+    delete hdr;
+}
