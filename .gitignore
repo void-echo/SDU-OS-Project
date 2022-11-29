@@ -16,7 +16,8 @@
 
 **/nachos
 
-# ignore executables
-# **/nachos
+**/SONG
+nachos-3.4-ualr-lw
+SDU2
 
 **/tmp-records

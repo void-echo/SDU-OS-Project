@@ -62,6 +62,48 @@ PendingInterrupt::PendingInterrupt(VoidFunctionPtr func, _int param, int time,
 //	Interrupts start disabled, with no interrupts pending, etc.
 //----------------------------------------------------------------------
 
+// Since we need to return a unique identifier for the memory space AddrSpace,
+// Here we need to initialize the AddrSpace object outside of StartProcess,
+// So we split the StartProcess function.
+Thread *thread;
+AddrSpace *space;
+void StartProcess(int n) {
+    currentThread->space = space;
+
+    currentThread->space->InitRegisters();
+    currentThread->space->RestoreState();
+    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ In another thread\n");
+    machine->Run();
+    ASSERT(FALSE);
+}
+
+void Interrupt::Exec(char *filename) {
+    OpenFile *executable = fileSystem->Open(filename);
+    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ In Exec\n");
+    printf("Exec filename: %s\n", filename);
+    if (executable == NULL) {
+        printf("Unable to open file %s\n", filename);
+        return;
+    }
+    space = new AddrSpace(executable);
+    delete executable;  // close file
+    thread = new Thread("another thread");
+    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ another thread created\n");
+    thread->Fork(StartProcess, 1);
+    machine->WriteRegister(2, space->getSpaceID());  // return space id
+    currentThread->Yield();
+}
+
+void Interrupt::PageFault() {
+    int badVAddr =
+        (int)machine->ReadRegister(BadVAddrReg);  // cpu要访问的虚拟地址
+    //        printf("虚拟地址 badVAddr is %d\n",badVAddr);
+    currentThread->space->clock(badVAddr);
+    stats->numPageFaults++;
+    machine->registers[NextPCReg] = machine->registers[PCReg];
+    machine->registers[PCReg] -= 4;
+}
+
 Interrupt::Interrupt() {
     level = IntOff;
     pending = new List();
@@ -231,38 +273,7 @@ void Interrupt::Halt() {
     Cleanup();  // Never returns.
 }
 
-Thread *thread;
-AddrSpace *space;
-
-void StartProcess(int n) {
-    currentThread->space = space;
-
-    currentThread->space->InitRegisters();
-    currentThread->space->RestoreState();
-    // printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ In another thread\n");
-    machine->Run();
-    ASSERT(FALSE);
-}
-
-void Interrupt::Exec(char *filename) {
-    OpenFile *executable = fileSystem->Open(filename);
-    // printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ In Exec\n");
-    printf("Exec filename: %s\n", filename);
-    if (executable == NULL) {
-        printf("Unable to open file %s\n", filename);
-        return;
-    }
-    space = new AddrSpace(executable);
-    delete executable;  // close file
-    thread = new Thread("another thread");
-    // printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ another thread created\n");
-    thread->Fork(StartProcess, 1);
-    machine->WriteRegister(2, space->getSpaceId());     // return space id
-    currentThread->Yield();
-}
-void Interrupt::PrintInt(int n) {
-    printf("----- PrintInt: %d -----\n", n);
-}
+void Interrupt::PrintInt(int n) { printf("----- PrintInt: %d -----\n", n); }
 //----------------------------------------------------------------------
 // Interrupt::Schedule
 // 	Arrange for the CPU to be interrupted when simulated time

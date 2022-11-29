@@ -70,9 +70,9 @@ class PendingInterrupt {
 
     VoidFunctionPtr handler;  // The function (in the hardware device
                               // emulator) to call when the interrupt occurs
-    _int arg;      // The argument to the function.
-    int when;      // When the interrupt is supposed to fire
-    IntType type;  // for debugging
+    _int arg;                 // The argument to the function.
+    int when;                 // When the interrupt is supposed to fire
+    IntType type;             // for debugging
 };
 
 // The following class defines the data structures for the simulation
@@ -106,6 +106,7 @@ class Interrupt {
 
     void YieldOnReturn();  // cause a context switch on return
                            // from an interrupt handler
+    void PageFault();      // cause a page fault
 
     MachineStatus getStatus() { return status; }  // idle, kernel, user
     void setStatus(MachineStatus st) { status = st; }
@@ -127,12 +128,12 @@ class Interrupt {
     void OneTick();  // Advance simulated time
 
    private:
-    IntStatus level;  // are interrupts enabled or disabled?
-    List* pending;    // the list of interrupts scheduled
-                    // to occur in the future
-    bool inHandler;      // TRUE if we are running an interrupt handler
-    bool yieldOnReturn;  // TRUE if we are to context switch
-                         // on return from the interrupt handler
+    IntStatus level;       // are interrupts enabled or disabled?
+    List* pending;         // the list of interrupts scheduled
+                           // to occur in the future
+    bool inHandler;        // TRUE if we are running an interrupt handler
+    bool yieldOnReturn;    // TRUE if we are to context switch
+                           // on return from the interrupt handler
     MachineStatus status;  // idle, kernel mode, user mode
 
     // these functions are internal to the interrupt simulation code

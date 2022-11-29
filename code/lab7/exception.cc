@@ -22,9 +22,9 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
-#include "system.h"
-#include "syscall.h"
 #include "machine.h"
+#include "syscall.h"
+#include "system.h"
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -48,7 +48,6 @@
 //	"which" is the kind of exception.  The list of possible exceptions
 //	are in machine.h.
 //----------------------------------------------------------------------
-
 
 void AdvancePC() {
     machine->WriteRegister(PCReg, machine->ReadRegister(PCReg) + 4);
@@ -81,9 +80,9 @@ void ExceptionHandler(ExceptionType which) {
         interrupt->PrintInt(machine->ReadRegister(4));
         printf("reg4: %d\n", machine->ReadRegister(4));
         AdvancePC();
-    }
-    
-    else {
+    } else if ((which == PageFaultException)) {
+        interrupt->PageFault();
+    } else {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);
     }

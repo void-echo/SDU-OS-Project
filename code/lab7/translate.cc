@@ -201,8 +201,10 @@ ExceptionType Machine::Translate(int virtAddr, int *physAddr, int size,
 
     // calculate the virtual page number, and offset within the page,
     // from the virtual address
-    vpn = (unsigned)virtAddr / PageSize;
-    offset = (unsigned)virtAddr % PageSize;
+	// TODO HERE: CHANGED
+    // vpn = (unsigned)virtAddr / PageSize;
+    // offset = (unsigned)virtAddr % PageSize;
+	currentThread->space->Translate(virtAddr, &vpn, &offset);
 
     if (tlb == NULL) {  // => page table => vpn is index into table
         if (vpn >= pageTableSize) {
