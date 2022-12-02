@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 #include "copyright.h"
 #include "system.h"
 #include "synch.h"
@@ -16,15 +17,16 @@
 
 Thread *threads[N_THREADS];
 char threads_names[N_THREADS][MAX_NAME];  
-Semaphore *barrier,*mutex,*barrier1,*mutex1;  
+Semaphore *barrier,*mutex;  
 Thread *current_thread;
 
-void MakeTicks(int n) {
-    
-    for(int i=0;i<n;i++){ }
-    //sleep(1);
+void MakeTicks(_int which){
+    int x = rand();
+    if(x%2==0){
+        threads[which]->Yield();
+    }
 
-} // advance n ticks of simulated time
+}
 
 
 int count = 0;
@@ -33,35 +35,23 @@ int count1 = 0;
 
 void BarThread(_int which)
 {
-    //printf("Thread %d sleep\n", which);
-    //MakeTicks(N_TICKS);
-
-   
-    mutex1->P();
-        count1 = count1+1;
-        if(count1 == 10){
-            barrier1->V();
-	    //printf("begin rendezvous\n");
-        }
-    mutex1->V();
-    barrier1->P();
-    barrier1->V();
-
+    MakeTicks(which);
 
     printf("Thread %d rendezvous\n", which);
+
+    
     mutex->P();
         count = count+1;
         if(count == 10){
-            barrier->V();
 	    printf("Thread %d is the last\n", which);
+            barrier->V();
+
         }
     mutex->V();
 
     
     barrier->P();
-    //printf("barrier->P() barrier value: %d \n", barrier->value);
     barrier->V();
-    //printf("barrier->V() barrier value: %d \n", barrier->value);
     printf("Thread %d critical point\n", which);
 
 }
@@ -69,17 +59,17 @@ void BarThread(_int which)
 
 void ThreadsBarrier()
 {
+srand(time(0));
     mutex = new Semaphore("mutex", 1);
-    mutex1 = new Semaphore("mutex1", 1);
     barrier = new Semaphore("barrier", 1);
-    barrier1 = new Semaphore("barrier1", 1);
+
     barrier->P();
-    barrier1->P();
     // create and fork N_THREADS of consumer threads 
     for (int i=0; i < N_THREADS; i++) {
-        // this statemet is to form a string to be used as the name for thread i. 
-        sprintf(threads_names[i], "%d", i);
-        threads[i] = new Thread(threads_names[i]);
+        
+        threads[i] = new Thread("thread"+i);
+    };
+    for (int i=0; i < N_THREADS; i++) {
 	threads[i]->Fork(BarThread, i);
     };
 }

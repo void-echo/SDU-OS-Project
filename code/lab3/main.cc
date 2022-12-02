@@ -26,7 +26,7 @@
 //    -c tests the console
 //
 //  FILESYS
-//    -f causes the physical disk to be formatted
+//    -f causes the physical disk to be f=ormatted
 //    -cp copies a file from UNIX to Nachos
 //    -p prints a Nachos file to stdout
 //    -r removes a Nachos file from the file system
