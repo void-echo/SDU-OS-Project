@@ -264,10 +264,6 @@ void FileHeader::Print() {  // TODO HERE: NEED TO PRINT FULL FILE CONTENTS
     char *data = new char[SectorSize];
 
     if (dataSectors[lastIndex] == -1) {
-        // printf("FileHeader contents.  File size: %d, Last Updated Time: %d,
-        // File blocks:\n", numBytes, lastUpdatedTime); printf("FileHeader
-        // contents.  File size: %d, Last Updated Time: %d,  File blocks:\n",
-        // numBytes, lastUpdatedTime);
         if (lastUpdatedTime != 0) {
             printf("FileHeader contents.  File size: %d,  Last Updated Time: ",
                    numBytes);
@@ -299,7 +295,21 @@ void FileHeader::Print() {  // TODO HERE: NEED TO PRINT FULL FILE CONTENTS
     } else {
         int dataSectors2[NumDirect2];
         synchDisk->ReadSector(dataSectors[lastIndex], (char *)dataSectors2);
-        printf("FileHeader contents. File size: %d. File blocks:\n", numBytes);
+        if (lastUpdatedTime != 0) {
+            printf("FileHeader contents.  File size: %d,  Last Updated Time: ",
+                   numBytes);
+        } else {
+            printf("FileHeader contents.  File size: %d", numBytes);
+        }
+        if (lastUpdatedTime != 0) {
+            time_t ___time___ = lastUpdatedTime;
+            struct tm *ptm = localtime(&___time___);
+            // lastUpdatedTime is sec num from UTC 1970.1.1 00:00:00
+            // print time in readable format
+            printf("%d-%d-%d %d:%d:%d", ptm->tm_year + 1900, ptm->tm_mon + 1,
+                   ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+        }
+        printf(",  File blocks:\n");
         for (i = 0; i < lastIndex; i++) printf("%d ", dataSectors[i]);
         for (; i < getSecNum(); i++) printf("%d ", dataSectors2[i - lastIndex]);
         printf("\nFile contents:\n");
