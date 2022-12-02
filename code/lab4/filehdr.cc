@@ -24,9 +24,10 @@
 
 #include "filehdr.h"
 
+#include <time.h>
+
 #include "copyright.h"
 #include "system.h"
-#include <time.h>
 
 //----------------------------------------------------------------------
 // FileHeader::Allocate
@@ -81,7 +82,8 @@ void FileHeader::FetchFrom(int sector) {
 //----------------------------------------------------------------------
 
 void FileHeader::WriteBack(int sector) {
-    synchDisk->WriteSector(sector, (char *)this);           // TODO HERE: HOW DID THIS WORK ?
+    synchDisk->WriteSector(sector,
+                           (char *)this);  // TODO HERE: HOW DID THIS WORK ?
 }
 
 //----------------------------------------------------------------------
@@ -109,11 +111,15 @@ bool FileHeader::Append(BitMap *freeMap, int fileSize) {
     updateTime();
     int lastSectorSpace = SectorSize - (numBytes % SectorSize);
     if (fileSize > lastSectorSpace) {
-        fileSize -= lastSectorSpace; // Put in the last sector, as much as possible
-        int newNumSectors = divRoundUp(fileSize, SectorSize);   // update necessary new sectors
-       
-        if (freeMap->NumClear() < newNumSectors) return FALSE;  // not enough space
-        int oldSectorNum = divRoundUp(numBytes, SectorSize);  // old sector number
+        fileSize -=
+            lastSectorSpace;  // Put in the last sector, as much as possible
+        int newNumSectors =
+            divRoundUp(fileSize, SectorSize);  // update necessary new sectors
+
+        if (freeMap->NumClear() < newNumSectors)
+            return FALSE;  // not enough space
+        int oldSectorNum =
+            divRoundUp(numBytes, SectorSize);  // old sector number
         numBytes += (fileSize + lastSectorSpace);
         for (int i = oldSectorNum; i < oldSectorNum + newNumSectors; i++) {
             dataSectors[i] = freeMap->Find();
@@ -137,17 +143,26 @@ void FileHeader::updateTime() {
 //	the data blocks pointed to by the file header.
 //----------------------------------------------------------------------
 
-void FileHeader::Print() {                          // TODO HERE: NEED TO PRINT FULL FILE CONTENTS
+void FileHeader::Print() {  // TODO HERE: NEED TO PRINT FULL FILE CONTENTS
     int i, j, k;
     char *data = new char[SectorSize];
 
-    // printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File blocks:\n", numBytes, lastUpdatedTime);
-    printf("FileHeader contents.  File size: %d,  Last Updated Time: ", numBytes);
-    time_t ___time___ = lastUpdatedTime;
-    struct tm *ptm = localtime(&___time___);
-    // lastUpdatedTime is sec num from UTC 1970.1.1 00:00:00
-    // print time in readable format
-    printf("%d-%d-%d %d:%d:%d", ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    // printf("FileHeader contents.  File size: %d, Last Updated Time: %d,  File
+    // blocks:\n", numBytes, lastUpdatedTime);
+    if (lastUpdatedTime != 0) {
+        printf("FileHeader contents.  File size: %d,  Last Updated Time: ",
+               numBytes);
+    } else {
+        printf("FileHeader contents.  File size: %d", numBytes);
+    }
+    if (lastUpdatedTime != 0) {
+        time_t ___time___ = lastUpdatedTime;
+        struct tm *ptm = localtime(&___time___);
+        // lastUpdatedTime is sec num from UTC 1970.1.1 00:00:00
+        // print time in readable format
+        printf("%d-%d-%d %d:%d:%d", ptm->tm_year + 1900, ptm->tm_mon + 1,
+               ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    }
     printf(",  File blocks:\n");
     for (i = 0; i < getSecNum(); i++) printf("%d ", dataSectors[i]);
     printf("\nFile contents:\n");
