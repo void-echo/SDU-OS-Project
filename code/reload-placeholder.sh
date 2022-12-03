@@ -22,3 +22,7 @@ do
         done
     done
 done
+
+
+# how to tar a directory
+# tar -cvf ../lab2.tar ../lab2
