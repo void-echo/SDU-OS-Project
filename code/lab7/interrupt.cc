@@ -28,8 +28,8 @@
 // Make VSCode happy
 #ifdef _WIN32
 #include "machine.h"
-extern Machine *machine; 
-extern AddrSpace* space;
+extern Machine *machine;
+extern AddrSpace *space;
 extern FileSystem *fileSystem;
 #endif
 
@@ -166,7 +166,7 @@ void Interrupt::OneTick() {
         ;
     ChangeLevel(IntOff, IntOn);  // re-enable interrupts
     if (yieldOnReturn) {         // if the timer device handler asked
-                          // for a context switch, ok to do it now
+                                 // for a context switch, ok to do it now
         yieldOnReturn = FALSE;
         status = SystemMode;  // yield is a kernel routine
         currentThread->Yield();
@@ -408,12 +408,24 @@ void Interrupt::PrintInt() {
     printf("%d\n", IntID);
 }
 
-// lab7-----------------------------
+extern SWAP_STRATEGY swap_strategy; // FIFO for default
+
 bool Interrupt::PageFault() {
     int badVAddr = machine->ReadRegister(BadVAddrReg);
     AddrSpace *space = currentThread->space;
     stats->numPageFaults++;
-    int t = space->clock(badVAddr);
+    int t = -1;
+    // int t = space->clock(badVAddr);
+    // int t = space->FIFO(badVAddr);
+
+    if (swap_strategy == STR__FIFO__) {
+        t = space->FIFO(badVAddr);
+    } else if (swap_strategy == STR__CLOCK__) {
+        t = space->clock(badVAddr);
+    } else {
+        printf("Unknown swap swap_strategy: %d, expect 1 for FIFO or 2 for CLOCK.\n", swap_strategy);
+        ASSERT(FALSE);
+    }
     if (t) {
         if (t == 2) {
             stats->numWriteBacks++;

@@ -14,6 +14,14 @@
 #include "synch.h"
 #include "system.h"
 
+
+// Make VSCode happy
+#ifdef _WIN32 
+extern FileSystem* fileSystem;
+#include "machine.h"
+extern Machine* machine;
+#endif
+
 //----------------------------------------------------------------------
 // StartProcess
 // 	Run a user program.  Open the executable, load it into

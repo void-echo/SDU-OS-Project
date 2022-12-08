@@ -64,7 +64,7 @@ static void SwapHeader(NoffHeader *noffH) {
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-BitMap *AddrSpace::userMap = new BitMap(5);
+BitMap *AddrSpace::userMap = new BitMap(numPhysPages);
 
 AddrSpace::AddrSpace(OpenFile *executable, char *filename) {
     // ------------------ Constructor ------------------
@@ -115,7 +115,6 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename) {
     pageTable = new TranslationEntry[numPages];
 
     for (i = 0; i < numPages; i++) {
-        // 初始化页表
         pageTable[i].virtualPage = i;  // for now, virtual page # = phys page #
         pageTable[i].physicalPage = -1;
         pageTable[i].valid = FALSE;
@@ -137,31 +136,27 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename) {
 
     char *__VM__ = new char[size];
     // 将用户程序的内容写入磁盘的中间过渡
-    // for (i = 0; i < size; i++) __VM__[i] = 0;
 
     if (noffH.code.size > 0) {
         DEBUG('a', "\tCopying code segment, at 0x%x, size %d\n",
               noffH.code.virtualAddr, noffH.code.size);
-        executable->ReadAt(&(__VM__[noffH.code.virtualAddr]),
-                           noffH.code.size, noffH.code.inFileAddr);
-        vm->WriteAt(&(__VM__[noffH.code.virtualAddr]),
-                    noffH.code.size, noffH.code.virtualAddr * PageSize);
+        executable->ReadAt(&(__VM__[noffH.code.virtualAddr]), noffH.code.size,
+                           noffH.code.inFileAddr);
+        vm->WriteAt(&(__VM__[noffH.code.virtualAddr]), noffH.code.size,
+                    noffH.code.virtualAddr * PageSize);
     }
     if (noffH.initData.size > 0) {
         DEBUG('a', "\tCopying data segment, at 0x%x, size %d\n",
               noffH.initData.virtualAddr, noffH.initData.size);
         executable->ReadAt(&(__VM__[noffH.initData.virtualAddr]),
                            noffH.initData.size, noffH.initData.inFileAddr);
-        vm->WriteAt(&(__VM__[noffH.initData.virtualAddr]),
-                    noffH.initData.size, noffH.initData.virtualAddr * PageSize);
+        vm->WriteAt(&(__VM__[noffH.initData.virtualAddr]), noffH.initData.size,
+                    noffH.initData.virtualAddr * PageSize);
     }
     //
     delete vm;
 
     Print();
-    // zero out the entire address space, to zero the unitialized data segment
-    // and the stack segment
-    //------------------------finish-------------
 }
 
 //----------------------------------------------------------------------
@@ -175,6 +170,7 @@ AddrSpace::~AddrSpace() {
         userMap->Clear(pageTable[i].physicalPage);
     }
     ThreadMap[spaceID] = 0;
+    delete[] virtualMem;
 }
 
 //----------------------------------------------------------------------
@@ -238,15 +234,11 @@ void AddrSpace::Print() {
 
 // lab7----------------------------------------
 int AddrSpace::FIFO(int badVAddr) {
-    printf("-------FIFO算法实现页置换-------\n");
-
+    printf("--------------- FIFO Algorithm ---------------\n");
     int temp = 0;
     if ((temp = userMap->Find()) != -1) {
         int newPage = badVAddr / PageSize;
-        // int newPage;
-        // Translate(badVAddr, &newPage,&temp);
-        //  printf("userMap->Find()\n",temp);
-        printf("%d页写入,无需写出旧页\n", newPage);
+        printf("%d页写入,不需要写出旧页.\n", newPage);
         virtualMem[p_vm] = newPage;
         p_vm = (p_vm + 1) % numPhysPages;
         pageTable[newPage].physicalPage = temp;
@@ -262,24 +254,20 @@ int AddrSpace::FIFO(int badVAddr) {
         pageTable[newPage].use = true;
         pageTable[newPage].dirty = false;
         pageTable[newPage].readOnly = false;
-
         Print();
-
         return 0;
 
     } else {
+        int oldPage = virtualMem[p_vm];
         int newPage = badVAddr / PageSize;
         // int newPage;
         // Translate(badVAddr, &newPage,&temp);
-        int oldPage = virtualMem[p_vm];
-
         virtualMem[p_vm] = newPage;
         p_vm = (p_vm + 1) % numPhysPages;
 
         a = Swap(oldPage, newPage);
 
         OpenFile *executable = fileSystem->Open("VMFile");
-
         if (executable == NULL) {
             printf("Unable to open filssse %s\n", filename);
             return 3;
@@ -288,7 +276,6 @@ int AddrSpace::FIFO(int badVAddr) {
             &(machine->mainMemory[pageTable[newPage].physicalPage * PageSize]),
             PageSize, newPage * PageSize);
         delete executable;
-
         Print();
         return 1 + a;
     }
@@ -300,7 +287,7 @@ int AddrSpace::Swap(int oldPage, int newPage) {
     int a = writeBack(oldPage);
 
     pageTable[newPage].physicalPage = pageTable[oldPage].physicalPage;
-    printf("换出页oldPage: %d,换入页newPage: %d (frame %d)\n", oldPage, newPage,
+    printf("Swap out oldPage: %d, Swap in newPage: %d (frame %d)\n", oldPage, newPage,
            pageTable[oldPage].physicalPage);
     // pageTable[oldPage].physicalPage = -1;
     pageTable[oldPage].valid = FALSE;
@@ -311,7 +298,7 @@ int AddrSpace::Swap(int oldPage, int newPage) {
     return a;
 }
 
-// 通过dirty为判断是否已经改动过，如果true，写回磁盘
+// if dirty bit set to true, write back to disk
 int AddrSpace::writeBack(int oldPage) {
     if (pageTable[oldPage].dirty) {
         OpenFile *executable = fileSystem->Open("VMFile");
@@ -330,16 +317,16 @@ int AddrSpace::writeBack(int oldPage) {
 }
 
 int AddrSpace::clock(int badVAddr) {
-    // stats->CountFaults();
-    printf("-------增强型二次机会算法实现页置换-------\n");
+    printf("--------------- CLOCK Algorithm ---------------\n");
     int temp = 0;
     if ((temp = userMap->Find()) != -1) {
+        // user map is not full
         int newPage = badVAddr / PageSize;
         // int newPage;
         // Translate(badVAddr, &newPage,&temp);
         printf("temp %d\n", temp);
         // printf("userMap->Find()\n",temp);
-        printf("%d页写入,无需写出旧页\n", newPage);
+        printf("%d页写入,不需要写出旧页\n", newPage);
         virtualMem[p_vm] = newPage;
         p_vm = (p_vm + 1) % numPhysPages;
         pageTable[newPage].physicalPage = temp;
@@ -355,73 +342,63 @@ int AddrSpace::clock(int badVAddr) {
         pageTable[newPage].use = true;
         pageTable[newPage].dirty = false;
         pageTable[newPage].readOnly = false;
-
         Print();
-
         return 0;
 
     } else {
         int oldPage;
-        int count = 0;  // 用来计数，看看这一轮循环有没有能换的
-        // 第一轮，找(0,0)
+        int count = 0;  // circle count
+        // search from (0, 0)
         for (int i = 0; i < numPhysPages; ++i) {
-            if (pageTable[virtualMem[p_vm]].use == 0 &&
-                pageTable[virtualMem[p_vm]].dirty == 0) {
+            if (notUsednotDirty()) {
                 oldPage = pageTable[virtualMem[p_vm]].virtualPage;
                 printf("第一轮，找到的要替换的页是：%d \n", oldPage);
-                break;  // 找到，就立刻跳出循环
+                break;  
             }
             p_vm = (p_vm + 1) % numPhysPages;  // 指向要被替换出的页,循环转圈
             count++;
         }
-        if (count == numPhysPages) {  // 说明第一轮没找到，进入第二轮
-            printf("第一轮没找到需要替换的页\n");
+        if (count == numPhysPages) {  // 2th 
             count = 0;
             for (int i = 0; i < numPhysPages; i++) {
-                if (pageTable[virtualMem[p_vm]].use == 0 &&
-                    pageTable[virtualMem[p_vm]].dirty == 1) {
+                if (notUsedbutDirty()) {
                     oldPage = pageTable[virtualMem[p_vm]].virtualPage;
                     printf("第二轮，找到的要替换的页是：%d \n", oldPage);
-                    break;  // 找到了u=0.d=1的页
+                    break;  
                 }
-                // 修改使用为为0
+                // set all pages use bit to 0
                 pageTable[virtualMem[p_vm]].use = 0;
                 p_vm = (p_vm + 1) % numPhysPages;
                 count++;
             }
         }
         if (count == numPhysPages) {
-            printf("第二轮没找到需要替换的页\n");
             count = 0;
             for (int i = 0; i < numPhysPages; ++i) {
-                if (pageTable[virtualMem[p_vm]].use == 0 &&
-                    pageTable[virtualMem[p_vm]].dirty == 0) {
+                if (notUsednotDirty()) {
                     oldPage = pageTable[virtualMem[p_vm]].virtualPage;
                     printf("第三轮，找到的要替换的页是：%d \n", oldPage);
-                    break;  // 找到了u=0.d=0的页
+                    break; 
                 }
                 p_vm = (p_vm + 1) % numPhysPages;
                 count++;
             }
         }
         if (count == numPhysPages) {
-            printf("第三轮没找到需要替换的页\n");
             for (int i = 0; i < numPhysPages; ++i) {
-                if (pageTable[virtualMem[p_vm]].use == 0 &&
-                    pageTable[virtualMem[p_vm]].dirty == 1) {
+                if (notUsedbutDirty()) {
                     oldPage = pageTable[virtualMem[p_vm]].virtualPage;
                     printf("第四轮，找到的要替换的页是：%d \n", oldPage);
-                    break;  // 找到了u=0.d=1的页
+                    break; 
                 }
                 p_vm = (p_vm + 1) % numPhysPages;
             }
         }
 
         int newPage = badVAddr / PageSize;
-        // printf("%d,%d\n",newPage,p_vm );
         ASSERT(newPage < numPages);
         virtualMem[p_vm] = newPage;
-        p_vm = (p_vm + 1) % numPhysPages;  // 后移指针
+        p_vm = (p_vm + 1) % numPhysPages;  // moveback pointer
 
         a = Swap(oldPage, newPage);
 

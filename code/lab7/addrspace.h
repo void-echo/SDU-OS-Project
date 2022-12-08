@@ -23,6 +23,12 @@
 // lab7--------------------------------
 #define numPhysPages 5  // 固定分配的帧数
 
+#ifndef SWAP_STRATEGY
+#define SWAP_STRATEGY int
+#define STR__FIFO__ 1
+#define STR__CLOCK__ 2
+#endif
+
 class AddrSpace {
    public:
     AddrSpace(OpenFile *executable,
@@ -45,14 +51,20 @@ class AddrSpace {
     int Swap(int oldPage, int newPage);
     // void Translate(int addr,int* vpn, int *offset);
     int writeBack(int oldPage);
+    bool notUsednotDirty() {
+        return pageTable[virtualMem[p_vm]].use == 0 &&
+               pageTable[virtualMem[p_vm]].dirty == 0;
+    }
+    bool notUsedbutDirty() {
+        return pageTable[virtualMem[p_vm]].use == 0 &&
+               pageTable[virtualMem[p_vm]].dirty == 1;
+    }
 
    private:
     TranslationEntry *pageTable;  // Assume linear page table translation
                                   // for now!
     unsigned int numPages;        // Number of pages in the virtual
                                   // address space
-
-    //-----------lab6-----------
     static BitMap *userMap;
     unsigned int spaceID;
 
