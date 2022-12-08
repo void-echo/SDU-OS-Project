@@ -21,45 +21,78 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
-#include "addrspace.h"
 #include "copyright.h"
-#include "machine.h"
 #include "syscall.h"
 #include "system.h"
+
+#ifdef _WIN32
+#include "machine.h"
+extern Machine *machine; 
+#endif
+
+//----------------------------------------------------------------------
+// ExceptionHandler
+// 	Entry point into the Nachos kernel.  Called when a user program
+//	is executing, and either does a syscall, or generates an addressing
+//	or arithmetic exception.
+//
+// 	For system calls, the following is the calling convention:
+//
+// 	system call code -- r2
+//		arg1 -- r4
+//		arg2 -- r5
+//		arg3 -- r6
+//		arg4 -- r7
+//
+//	The result of the system call, if any, must be put back into r2.
+//
+// And don't forget to increment the pc before returning. (Or else you'll
+// loop making the same system call forever!
+//
+//	"which" is the kind of exception.  The list of possible exceptions
+//	are in machine.h.
+//----------------------------------------------------------------------
+
+//--------------lab6--------------------------
 void AdvancePC() {
-    machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg) + 4);
-    machine->WriteRegister(PCReg, machine->ReadRegister(PCReg) + 4);
+    machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
+    machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
+    machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg) + 4);
 }
+
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2);
 
-    if ((which == SyscallException) && (type == SC_Halt)) {
-        DEBUG('a', "Shutdown, initiated by user program.\n");
-        interrupt->Halt();
-    } else if ((which == SyscallException) && (type == SC_Exec)) {
-        printf("Execute system call of Exec()\n");
-        char filename[50];
-        int addr = machine->ReadRegister(4);
-        int i = 0;
-
-        //        我们的参数不能以直接转换成指针的形式从内存中读取，
-        //        原因是这里的内存地址实际上是虚拟机的内存，
-        //        而转换成指针形式的内存地址是真实机器中的地址。
-        //        所以读取要用machine->ReadMem(int addr,int size,int
-        //        *value)方法。 而读取字符串，则需要循环至读取到\0为止。
-        machine->ReadMem(addr + i, 1,
-                         (int *)&filename[i]);  //读取filename，要先读出来
-        while (filename[i++] != '\0') {
-            machine->ReadMem(addr + i, 1, (int *)&filename[i]);
+    if ((which == SyscallException)) {
+        // lab6------------------------------
+        switch (type) {
+            case SC_Halt:
+                DEBUG('a', "Shutdown, initiated by user program.\n");
+                interrupt->Halt();
+                return;
+            case SC_Exec:
+                interrupt->Exec();
+                AdvancePC();
+                return;
+            case SC_PrintInt:
+                // printf("Execute system call of PrintInt()\n");
+                interrupt->PrintInt();
+                AdvancePC();
+                return;
+            default:
+                printf("NO systemcall execute\n");
+                //-----------------------------
         }
-        printf("Exec(%s):\n", filename);
+        // lab7----------------------------------------------
+    } else if ((which == PageFaultException)) {
+        bool k = interrupt->PageFault();
+        // printf("k的值%d\n",k);
+        DEBUG('a', "缺页异常.\n");
 
-        interrupt->Exec(filename);
-        AdvancePC();
-    } else if (which == PageFaultException) {  //处理缺页异常
+    }
 
-        interrupt->PageFault();
-    } else {
-        interrupt->Halt();
+    else {
+        printf("Unexpected user mode exception %d %d\n", which, type);
+        ASSERT(FALSE);
     }
 }

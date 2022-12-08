@@ -35,8 +35,10 @@
 #ifndef INTERRUPT_H
 #define INTERRUPT_H
 
+#include "addrspace.h"
 #include "copyright.h"
 #include "list.h"
+#include "stats.h"
 
 // Interrupts can be disabled (IntOff) or enabled (IntOn)
 enum IntStatus { IntOff, IntOn };
@@ -70,9 +72,9 @@ class PendingInterrupt {
 
     VoidFunctionPtr handler;  // The function (in the hardware device
                               // emulator) to call when the interrupt occurs
-    _int arg;      // The argument to the function.
-    int when;      // When the interrupt is supposed to fire
-    IntType type;  // for debugging
+    _int arg;                 // The argument to the function.
+    int when;                 // When the interrupt is supposed to fire
+    IntType type;             // for debugging
 };
 
 // The following class defines the data structures for the simulation
@@ -108,28 +110,35 @@ class Interrupt {
 
     void DumpState();  // Print interrupt state
 
-    void Exec(char* filename);  // Exec系统调用
-    void PageFault();           //处理缺页异常
-
     // NOTE: the following are internal to the hardware simulation code.
     // DO NOT call these directly.  I should make them "private",
     // but they need to be public since they are called by the
     // hardware device simulators.
 
-    void Schedule(VoidFunctionPtr handler,  // Schedule an interrupt to occur
-                  _int arg, int when,
-                  IntType type);  // at time ``when''.  This is called
-                                  // by the hardware device simulators.
+    void Schedule(
+        VoidFunctionPtr handler, _int arg,  // Schedule an interrupt to occur
+        int fromnow,
+        IntType type);  // "fromNow" is how far in the future (in simulated
+                        // time) the interrupt is to occur. This is called by
+                        // the hardware device simulators.
 
     void OneTick();  // Advance simulated time
 
+    // lab6---------------------
+    void AdvancePC();
+    // void StartProcess(int n);
+    int Exec();
+    void PrintInt();
+    // lab7--------------------
+    bool PageFault();
+
    private:
-    IntStatus level;  // are interrupts enabled or disabled?
-    List* pending;    // the list of interrupts scheduled
-                    // to occur in the future
-    bool inHandler;      // TRUE if we are running an interrupt handler
-    bool yieldOnReturn;  // TRUE if we are to context switch
-                         // on return from the interrupt handler
+    IntStatus level;       // are interrupts enabled or disabled?
+    List *pending;         // the list of interrupts scheduled
+                           // to occur in the future
+    bool inHandler;        // TRUE if we are running an interrupt handler
+    bool yieldOnReturn;    // TRUE if we are to context switch
+                           // on return from the interrupt handler
     MachineStatus status;  // idle, kernel mode, user mode
 
     // these functions are internal to the interrupt simulation code

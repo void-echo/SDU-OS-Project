@@ -30,6 +30,9 @@
 #define SC_Fork		9
 #define SC_Yield	10
 
+//----------------lab6------------------
+#define SC_PrintInt	11
+
 #ifndef IN_ASM
 
 /* The system call interface.  These are the operations the Nachos
@@ -57,6 +60,7 @@ typedef int SpaceId;
 /* Run the executable, stored in the Nachos file "name", and return the 
  * address space identifier
  */
+ 
 SpaceId Exec(char *name);
  
 /* Only return once the the user program "id" has finished.  
@@ -122,7 +126,11 @@ void Fork(void (*func)());
 /* Yield the CPU to another runnable thread, whether in this address space 
  * or not. 
  */
-void Yield();		
+void Yield();	
+
+//--------------lab6-------------------//
+
+void PrintInt(int k);
 
 #endif /* IN_ASM */
 

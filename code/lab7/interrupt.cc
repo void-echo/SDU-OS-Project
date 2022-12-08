@@ -22,13 +22,16 @@
 
 #include "interrupt.h"
 
-#include "addrspace.h"
-#include "console.h"
 #include "copyright.h"
-#include "machine.h"
-#include "synch.h"
-#include "syscall.h"
 #include "system.h"
+
+// Make VSCode happy
+#ifdef _WIN32
+#include "machine.h"
+extern Machine *machine; 
+extern AddrSpace* space;
+extern FileSystem *fileSystem;
+#endif
 
 // String definitions for debugging messages
 
@@ -62,48 +65,6 @@ PendingInterrupt::PendingInterrupt(VoidFunctionPtr func, _int param, int time,
 //
 //	Interrupts start disabled, with no interrupts pending, etc.
 //----------------------------------------------------------------------
-
-//由于需要返回内存空间AddrSpace的唯一标志符，
-//这里需要在StartProcess之外初始化AddrSpace对象，
-//所以把StartProcess函数拆分了。
-Thread *thread;
-AddrSpace *space;
-void StartProcess(int n) {
-    currentThread->space = space;
-
-    currentThread->space->InitRegisters();
-    currentThread->space->RestoreState();
-
-    machine->Run();
-    ASSERT(FALSE);
-}
-
-void Interrupt::Exec(char *filename) {
-    OpenFile *executable = fileSystem->Open(filename);
-    printf("In Exec 1!!!!!");
-    if (executable == NULL) {
-        printf("Unable to open file %s\n", filename);
-        return;
-    }
-    space = new AddrSpace(executable);
-    delete executable;
-    thread = new Thread("forked thread");
-    thread->Fork(StartProcess, 1);
-    printf("In Exec 2!!!!!");
-    //返回值，写回二号寄存器，没有实现join所以用不到
-    machine->WriteRegister(2, space->getSpaceID());
-    currentThread->Yield();
-}
-
-void Interrupt::PageFault() {
-    int badVAddr =
-        (int)machine->ReadRegister(BadVAddrReg);  // cpu要访问的虚拟地址
-    //        printf("虚拟地址 badVAddr is %d\n",badVAddr);
-    currentThread->space->clock(badVAddr);
-    stats->numPageFaults++;
-    machine->registers[NextPCReg] = machine->registers[PCReg];
-    machine->registers[PCReg] -= 4;
-}
 
 Interrupt::Interrupt() {
     level = IntOff;
@@ -386,4 +347,79 @@ void Interrupt::DumpState() {
     pending->Mapcar(PrintPending);
     printf("End of pending interrupts\n");
     fflush(stdout);
+}
+
+//-------------lab6------------
+
+Thread *thread;
+AddrSpace *space;
+static void StartProcess(_int n) {
+    currentThread->space = space;
+
+    currentThread->space->InitRegisters();  // set the initial register values
+    currentThread->space->RestoreState();   // load page table register
+
+    machine->Run();  // jump to the user progap
+
+    ASSERT(FALSE);  // machine->Run never returns;
+                    // the address space exits
+                    // by doing the syscall "exit"
+}
+
+int Interrupt::Exec() {
+    printf("Execute system call of Exec()\n");
+    // read argument
+    char filename[50];
+    int addr = machine->ReadRegister(4);
+    int i = 0;
+    do {
+        machine->ReadMem(addr + i, 1,
+                         (int *)&filename[i]);  // read filename from mainMemory
+    } while (filename[i++] != '\0');
+
+    printf("Exec(%s):\n", filename);
+
+    // open file
+    OpenFile *executable = fileSystem->Open(filename);
+
+    if (executable == NULL) {
+        printf("Unable to open file %s\n", filename);
+        return 0;
+    }
+
+    // new address space
+    space = new AddrSpace(executable, filename);
+    delete executable;  // close file
+
+    // new and fork thread
+    thread = new Thread("forked thread");
+    thread->Fork(StartProcess, 1);
+
+    // run the new thread
+    currentThread->Yield();
+
+    // return spaceID 向寄存器里写入spaceID
+    machine->WriteRegister(2, space->getSpaceID());
+}
+
+void Interrupt::PrintInt() {
+    int IntID = 0;
+    IntID = machine->ReadRegister(4);
+    printf("%d\n", IntID);
+}
+
+// lab7-----------------------------
+bool Interrupt::PageFault() {
+    int badVAddr = machine->ReadRegister(BadVAddrReg);
+    AddrSpace *space = currentThread->space;
+    stats->numPageFaults++;
+    int t = space->clock(badVAddr);
+    if (t) {
+        if (t == 2) {
+            stats->numWriteBacks++;
+            return TRUE;
+        }
+    } else {
+        return false;
+    }
 }
