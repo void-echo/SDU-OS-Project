@@ -9,14 +9,13 @@
 *.coff
 *.flat
 **/objects
-**/REFSTR0*
+# **/REFSTR0*
 **/SWAP0
 .vscode
 **/DISK
 
 **/nachos
 
-**/SONG
 nachos-3.4-ualr-lw
 SDU2
 

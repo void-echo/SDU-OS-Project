@@ -83,7 +83,7 @@ void ExceptionHandler(ExceptionType which) {
 
     } else if ((which == PageFaultException)) {
         bool k = interrupt->PageFault();
-        DEBUG('a', "缺页异常.\n");
+        DEBUG('a', "PageFault.\n");
     } else {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);

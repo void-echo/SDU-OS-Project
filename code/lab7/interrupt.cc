@@ -425,12 +425,12 @@ bool Interrupt::PageFault() {
             "Unknown swap swap_strategy: %d, expect 1 for FIFO or 2 for "
             "CLOCK.\n",
             swap_strategy);
-        ASSERT(FALSE);
+        ASSERT(false);
     }
     if (t) {
         if (t == 2) {
             stats->numWriteBacks++;
-            return TRUE;
+            return true;
         }
     } else
         return false;

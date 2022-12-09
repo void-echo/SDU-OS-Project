@@ -113,7 +113,7 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename) {
     pageTable = new TranslationEntry[numPages];
 
     for (i = 0; i < numPages; i++) {
-        pageTable[i].virtualPage = i; 
+        pageTable[i].virtualPage = i;
         pageTable[i].physicalPage = -1;
         pageTable[i].valid = false;
         pageTable[i].use = false;
@@ -231,64 +231,53 @@ void AddrSpace::Print() {
 }
 
 int AddrSpace::FIFO(int badVAddr) {
+    // return 0 if no swap out.
+    // return 1 if swap out.
+    // return 2 if no VMFile.
+    // return 3 if no VMFile.
     printf("--------------- FIFO Algorithm ---------------\n");
     int temp = 0;
     if ((temp = userMap->Find()) != -1) {
-        int newPage = badVAddr / PageSize;
-        printf("%d页写入,不需要写出旧页.\n", newPage);
-        virtualMem[p_vm] = newPage;
-        advancePtr();
-        pageTable[newPage].physicalPage = temp;
-        OpenFile *vm = fileSystem->Open("VMFile");
-        vm->ReadAt(
-            &(machine->mainMemory[pageTable[newPage].physicalPage * PageSize]),
-            PageSize, newPage * PageSize);
-        delete vm;
-
-        pageTable[newPage].valid = true;
-        pageTable[newPage].use = true;
-        pageTable[newPage].dirty = false;
-        pageTable[newPage].readOnly = false;
-        Print();
+        directSwapInRoutine(badVAddr, temp);
         return 0;
-    } else {
-        int oldVPN = virtualMem[p_vm];
-        int newPage = badVAddr / PageSize;
-        virtualMem[p_vm] = newPage;
-        advancePtr();
-
-        a = Swap(oldVPN, newPage);
-
-        OpenFile *executable = fileSystem->Open("VMFile");
-        if (executable == NULL) {
-            printf("Unable to open filssse %s\n", filename);
-            return 3;
-        }
-        executable->ReadAt(
-            &(machine->mainMemory[pageTable[newPage].physicalPage * PageSize]),
-            PageSize, newPage * PageSize);
-        delete executable;
-        Print();
-        return a + 1;
     }
+    int oldVPN = virtualMem[p_vm];
+    int newVPN = badVAddr / PageSize;
+    virtualMem[p_vm] = newVPN;
+    advancePtr();
+    writeBacked = Swap(oldVPN, newVPN);
+    OpenFile *executable = fileSystem->Open("VMFile");
+    if (executable == NULL) {
+        printf("Unable to open filssse %s\n", filename);
+        return 3;
+    }
+    executable->ReadAt(
+        &(machine->mainMemory[pageTable[newVPN].physicalPage * PageSize]),
+        PageSize, newVPN * PageSize);
+    delete executable;
+    Print();
+    return writeBacked + 1;
 }
 
-int AddrSpace::Swap(int oldVPN, int newPage) {
-    int a = writeBack(oldVPN);
-
-    pageTable[newPage].physicalPage = pageTable[oldVPN].physicalPage;
-    printf("Swap out oldVPN: %d, Swap in newPage: %d (frame %d)\n", oldVPN,
-           newPage, pageTable[oldVPN].physicalPage);
-    pageTable[oldVPN].valid = FALSE;
-    pageTable[newPage].physicalPage = pageTable[oldVPN].physicalPage;
-    pageTable[newPage].valid = TRUE;
-    pageTable[newPage].use = TRUE;
-    pageTable[newPage].dirty = FALSE;
-    return a;
+int AddrSpace::Swap(int oldVPN, int newVPN) {
+    // if dirty, writeback and return 1.
+    // if not dirty, refuse to writeback and return 0.
+    int writeBacked = writeBack(oldVPN);
+    pageTable[newVPN].physicalPage = pageTable[oldVPN].physicalPage;
+    printf("Swap out oldVPN: %d, Swap in newVPN: %d (frame %d)\n", oldVPN,
+           newVPN, pageTable[oldVPN].physicalPage);
+    pageTable[oldVPN].valid = false;
+    pageTable[newVPN].physicalPage = pageTable[oldVPN].physicalPage;
+    pageTable[newVPN].valid = true;
+    pageTable[newVPN].use = true;
+    pageTable[newVPN].dirty = false;
+    return writeBacked;
 }
 
 // if dirty bit set to true, write back to disk
 int AddrSpace::writeBack(int oldVPN) {
+    // if dirty, writeback and return 1.
+    // if not dirty, refuse to writeback and return 0.
     if (pageTable[oldVPN].dirty) {
         OpenFile *executable = fileSystem->Open("VMFile");
         if (executable == NULL) {
@@ -304,100 +293,94 @@ int AddrSpace::writeBack(int oldVPN) {
     return 0;
 }
 
+void AddrSpace::directSwapInRoutine(int badVAddr, int temp) {
+    int newVPN = badVAddr / PageSize;
+    printf("%d页写入,不需要写出旧页\n", newVPN);
+    virtualMem[p_vm] = newVPN;
+    advancePtr();
+    pageTable[newVPN].physicalPage = temp;
+    OpenFile *vm = fileSystem->Open("VMFile");
+    vm->ReadAt(
+        &(machine->mainMemory[pageTable[newVPN].physicalPage * PageSize]),
+        PageSize, newVPN * PageSize);
+    delete vm;
+
+    pageTable[newVPN].valid = true;
+    pageTable[newVPN].use = true;
+    pageTable[newVPN].dirty = false;
+    pageTable[newVPN].readOnly = false;
+    Print();
+}
+
 int AddrSpace::clock(int badVAddr) {
     printf("--------------- CLOCK Algorithm ---------------\n");
     int temp = 0;
     if ((temp = userMap->Find()) != -1) {
-        // user map is not full
-        int newPage = badVAddr / PageSize;
-        printf("temp %d\n", temp);
-        printf("%d页写入,不需要写出旧页\n", newPage);
-        virtualMem[p_vm] = newPage;
-        advancePtr();
-        pageTable[newPage].physicalPage = temp;
-
-        OpenFile *vm = fileSystem->Open("VMFile");
-
-        vm->ReadAt(
-            &(machine->mainMemory[pageTable[newPage].physicalPage * PageSize]),
-            PageSize, newPage * PageSize);
-        delete vm;
-
-        pageTable[newPage].valid = true;
-        pageTable[newPage].use = true;
-        pageTable[newPage].dirty = false;
-        pageTable[newPage].readOnly = false;
-        Print();
+        directSwapInRoutine(badVAddr, temp);
         return 0;
+    }
+    int oldVPN;
+    int count = 0;  // circle count
+    // search from (0, 0)
+    for (int i = 0; i < pnperp; ++i) {
+        if (notUsednotDirty()) {
+            oldVPN = ptrVPN();
+            printf("第一轮，找到的要替换的页是：%d \n", oldVPN);
+            break;
+        }
+        advancePtr();
+        count++;
+    }
+    if (count == pnperp) {  // 2th
+        count = 0;
+        for (int i = 0; i < pnperp; i++) {
+            if (notUsedbutDirty()) {
+                oldVPN = ptrVPN();
+                printf("第二轮，找到的要替换的页是：%d \n", oldVPN);
+                break;
+            }
 
-    } else {
-        int oldVPN;
-        int count = 0;  // circle count
-        // search from (0, 0)
+            pageTable[virtualMem[p_vm]].use = 0;
+            advancePtr();
+            count++;
+        }
+    }
+    if (count == pnperp) {
+        count = 0;
         for (int i = 0; i < pnperp; ++i) {
             if (notUsednotDirty()) {
                 oldVPN = ptrVPN();
-                printf("第一轮，找到的要替换的页是：%d \n", oldVPN);
+                printf("第三轮，找到的要替换的页是：%d \n", oldVPN);
                 break;
             }
-            advancePtr();  // 指向要被替换出的页,循环转圈
+            advancePtr();
             count++;
         }
-        if (count == pnperp) {  // 2th
-            count = 0;
-            for (int i = 0; i < pnperp; i++) {
-                if (notUsedbutDirty()) {
-                    oldVPN = ptrVPN();
-                    printf("第二轮，找到的要替换的页是：%d \n", oldVPN);
-                    break;
-                }
-
-                pageTable[virtualMem[p_vm]].use = 0;
-                advancePtr();
-                count++;
-            }
-        }
-        if (count == pnperp) {
-            count = 0;
-            for (int i = 0; i < pnperp; ++i) {
-                if (notUsednotDirty()) {
-                    oldVPN = ptrVPN();
-                    printf("第三轮，找到的要替换的页是：%d \n", oldVPN);
-                    break;
-                }
-                advancePtr();
-                count++;
-            }
-        }
-        if (count == pnperp) {
-            for (int i = 0; i < pnperp; ++i) {
-                if (notUsedbutDirty()) {
-                    oldVPN = ptrVPN();
-                    printf("第四轮，找到的要替换的页是：%d \n", oldVPN);
-                    break;
-                }
-                advancePtr();
-            }
-        }
-
-        int newPage = badVAddr / PageSize;
-        ASSERT(newPage < numPages);
-        virtualMem[p_vm] = newPage;
-        advancePtr();  // moveback pointer
-
-        a = Swap(oldVPN, newPage);
-
-        OpenFile *executable = fileSystem->Open("VMFile");
-
-        if (executable == NULL) {
-            printf("Unable to open filssse %s\n", filename);
-            return 3;
-        }
-        executable->ReadAt(
-            &(machine->mainMemory[pageTable[newPage].physicalPage * PageSize]),
-            PageSize, newPage * PageSize);
-        delete executable;
-        Print();
     }
-    return 1 + a;
+    if (count == pnperp) {
+        for (int i = 0; i < pnperp; ++i) {
+            if (notUsedbutDirty()) {
+                oldVPN = ptrVPN();
+                printf("第四轮，找到的要替换的页是：%d \n", oldVPN);
+                break;
+            }
+            advancePtr();
+        }
+    }
+    int newVPN = badVAddr / PageSize;
+    ASSERT(newVPN < numPages);
+    virtualMem[p_vm] = newVPN;
+    advancePtr();  // moveback pointer
+    writeBacked = Swap(oldVPN, newVPN);
+    OpenFile *executable = fileSystem->Open("VMFile");
+    if (executable == NULL) {
+        printf("Unable to open filssse %s\n", filename);
+        return 3;
+    }
+    executable->ReadAt(
+        &(machine->mainMemory[pageTable[newVPN].physicalPage * PageSize]),
+        PageSize, newVPN * PageSize);
+    delete executable;
+    Print();
+    return 1 + writeBacked;
 }

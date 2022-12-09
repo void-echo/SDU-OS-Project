@@ -49,10 +49,10 @@ class AddrSpace {
     unsigned int getSpaceID() { return spaceID; }
     // lab7----------------------
     int FIFO(int badVAddr);
-    int clock(int newPage);
-    int Swap(int oldPage, int newPage);
+    int clock(int newVPN);
+    int Swap(int oldVPN, int newVPN);
     // void Translate(int addr,int* vpn, int *offset);
-    int writeBack(int oldPage);
+    int writeBack(int oldVPN);
     bool notUsednotDirty() {
         return pageTable[virtualMem[p_vm]].use == 0 &&
                pageTable[virtualMem[p_vm]].dirty == 0;
@@ -68,6 +68,8 @@ class AddrSpace {
 
     inline void advancePtr() { p_vm = (p_vm + 1) % pnperp; }
 
+    void directSwapInRoutine(int badVAddr, int temp);
+
    private:
     TranslationEntry *pageTable;  // Assume linear page table translation
                                   // for now!
@@ -82,7 +84,7 @@ class AddrSpace {
     Statistics *stats = new Statistics;
     int virtualMem[pnperp];  // FIFO页顺序存储
     int p_vm;                // FIFO换出页指针
-    int a;
+    int writeBacked;
 };
 
 #endif  // ADDRSPACE_H

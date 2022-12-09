@@ -82,8 +82,8 @@ int main(int argc, char **argv) {
                    // for a particular command
     DEBUG('t', "Entering main");
     (void)Initialize(argc, argv);
-    // swap_strategy = STR__CLOCK__;
-    swap_strategy = STR__FIFO__;
+    swap_strategy = STR__CLOCK__;
+    // swap_strategy = STR__FIFO__;
 
 #ifdef THREADS
 //    ThreadTest();
