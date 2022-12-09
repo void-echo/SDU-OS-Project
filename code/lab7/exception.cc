@@ -53,7 +53,6 @@ extern Machine *machine;
 //	are in machine.h.
 //----------------------------------------------------------------------
 
-//--------------lab6--------------------------
 void AdvancePC() {
     machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
     machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
@@ -64,7 +63,6 @@ void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2);
 
     if ((which == SyscallException)) {
-        // lab6------------------------------
         switch (type) {
             case SC_Halt:
                 DEBUG('a', "Shutdown, initiated by user program.\n");
@@ -80,18 +78,13 @@ void ExceptionHandler(ExceptionType which) {
                 AdvancePC();
                 return;
             default:
-                printf("NO systemcall execute\n");
-                //-----------------------------
+                printf("Unexpected system call: %d, Expected: 0 for Halt, 2 for Exec, 11 for PrintInt.\n", type);
         }
-        // lab7----------------------------------------------
+
     } else if ((which == PageFaultException)) {
         bool k = interrupt->PageFault();
-        // printf("k的值%d\n",k);
         DEBUG('a', "缺页异常.\n");
-
-    }
-
-    else {
+    } else {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);
     }

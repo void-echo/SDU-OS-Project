@@ -405,25 +405,26 @@ int Interrupt::Exec() {
 void Interrupt::PrintInt() {
     int IntID = 0;
     IntID = machine->ReadRegister(4);
-    printf("%d\n", IntID);
+    printf("------ PrintInt: \t%d\t ------\n", IntID);
 }
 
-extern SWAP_STRATEGY swap_strategy; // FIFO for default
+extern SWAP_STRATEGY swap_strategy;  // FIFO for default
 
 bool Interrupt::PageFault() {
     int badVAddr = machine->ReadRegister(BadVAddrReg);
     AddrSpace *space = currentThread->space;
     stats->numPageFaults++;
     int t = -1;
-    // int t = space->clock(badVAddr);
-    // int t = space->FIFO(badVAddr);
 
     if (swap_strategy == STR__FIFO__) {
         t = space->FIFO(badVAddr);
     } else if (swap_strategy == STR__CLOCK__) {
         t = space->clock(badVAddr);
     } else {
-        printf("Unknown swap swap_strategy: %d, expect 1 for FIFO or 2 for CLOCK.\n", swap_strategy);
+        printf(
+            "Unknown swap swap_strategy: %d, expect 1 for FIFO or 2 for "
+            "CLOCK.\n",
+            swap_strategy);
         ASSERT(FALSE);
     }
     if (t) {
@@ -431,7 +432,6 @@ bool Interrupt::PageFault() {
             stats->numWriteBacks++;
             return TRUE;
         }
-    } else {
+    } else
         return false;
-    }
 }

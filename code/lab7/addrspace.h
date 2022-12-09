@@ -20,8 +20,10 @@
 #include "stats.h"
 #include "translate.h"
 #define UserStackSize 1024  // increase this as necessary!
-// lab7--------------------------------
-#define numPhysPages 5  // 固定分配的帧数
+
+#ifndef pnperp
+#define pnperp 5
+#endif
 
 #ifndef SWAP_STRATEGY
 #define SWAP_STRATEGY int
@@ -60,6 +62,12 @@ class AddrSpace {
                pageTable[virtualMem[p_vm]].dirty == 1;
     }
 
+    inline int ptrVPN() {
+        return pageTable[virtualMem[p_vm]].virtualPage;
+    }
+
+    inline void advancePtr() { p_vm = (p_vm + 1) % pnperp; }
+
    private:
     TranslationEntry *pageTable;  // Assume linear page table translation
                                   // for now!
@@ -68,13 +76,12 @@ class AddrSpace {
     static BitMap *userMap;
     unsigned int spaceID;
 
-    //-----------lab7-----------
     unsigned int StackPages;
     char *filename;
     NoffHeader noffH;
     Statistics *stats = new Statistics;
-    int virtualMem[numPhysPages];  // FIFO页顺序存储
-    int p_vm;                      // FIFO换出页指针
+    int virtualMem[pnperp];  // FIFO页顺序存储
+    int p_vm;                // FIFO换出页指针
     int a;
 };
 

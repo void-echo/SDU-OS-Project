@@ -67,7 +67,6 @@ void ExceptionHandler(ExceptionType which) {
         int addr = machine->ReadRegister(4);
         int i = 0;
         machine->ReadMem(addr + i, 1, (int*)&filename[i]);
-
         while (filename[i] != '\0') {
             i++;
             machine->ReadMem(addr + i, 1, (int*)&filename[i]);
@@ -81,9 +80,7 @@ void ExceptionHandler(ExceptionType which) {
         interrupt->PrintInt(machine->ReadRegister(4));
         printf("reg4: %d\n", machine->ReadRegister(4));
         AdvancePC();
-    }
-    
-    else {
+    } else {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);
     }
