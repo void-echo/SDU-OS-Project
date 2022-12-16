@@ -1,6 +1,6 @@
 # SDU-OS-Project
 
-> for now, the project is still private, and only for the members of the group.
+> Attention: This project repository is private, and only for the members of the group.
 
 This project is made possible by Void Echo and Three Liang @ Shandong University, School of Software Engineering.
 
