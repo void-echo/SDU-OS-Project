@@ -1,7 +1,5 @@
 # SDU-OS-Project
 
-> Attention: This project repository is private, and only for the members of the group.
-
 This project is made possible by Void Echo and Three Liang @ Shandong University, School of Software Engineering.
 
 The project is a simple OS, which is based on the book "Nachos: Not Another Completely Heuristic Operating System" by Andrew S. Tanenbaum.
